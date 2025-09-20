@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Новости России</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Новости России</h1>
+    <div class="news-container">
+        {% for article in articles %}
+            <div class="news-card">
+                <h2><a href="{{ article.url }}" target="_blank">{{ article.title }}</a></h2>
+                <p><strong>Сводка:</strong> {{ article.summary }}</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
