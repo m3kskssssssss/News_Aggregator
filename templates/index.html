@@ -1,19 +1,100 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Новости России</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h1>Новости России</h1>
-    <div class="news-container">
-        {% for article in articles %}
-            <div class="news-card">
-                <h2><a href="{{ article.url }}" target="_blank">{{ article.title }}</a></h2>
-                <p><strong>Сводка:</strong> {{ article.summary }}</p>
+{% extends "base.html" %}
+
+{% block title %}Главная - Новостной Агрегатор{% endblock %}
+
+{% block content %}
+<div class="news-grid">
+    {% for article in articles.items %}
+    <article class="news-card modern-card">
+        {% if article.url_to_image %}
+        <div class="news-image">
+            <img src="{{ article.url_to_image }}" alt="{{ article.title }}" loading="lazy">
+            <div class="image-overlay">
+                <span class="source-badge">{{ article.source.name }}</span>
             </div>
-        {% endfor %}
+        </div>
+        {% else %}
+        <div class="news-image news-image-placeholder gradient-bg-{{ loop.index0 % 5 }}">
+            <div class="placeholder-icon">
+                <i class="fas fa-newspaper"></i>
+            </div>
+            <div class="image-overlay">
+                <span class="source-badge">{{ article.source.name }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="news-content">
+            <div class="news-meta">
+                <span class="publish-date">
+                    <i class="fas fa-clock"></i>
+                    {{ article.published_at.strftime('%d.%m.%Y %H:%M') }}
+                </span>
+                <span class="category-badge">{{ article.source.category or 'Общее' }}</span>
+            </div>
+
+            <h2 class="news-title">
+                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">
+                    {{ article.title }}
+                </a>
+            </h2>
+
+            <p class="news-summary">{{ article.summary or article.description[:200] + '...' if article.description and article.description|length > 200 else article.description or '' }}</p>
+
+            <div class="news-actions">
+                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more-btn">
+                    <i class="fas fa-external-link-alt"></i> Читать полностью
+                </a>
+                <div class="action-buttons">
+                    <button class="action-btn share-btn" title="Поделиться">
+                        <i class="fas fa-share"></i>
+                    </button>
+                    <button class="action-btn bookmark-btn" title="В закладки">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </article>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <h3>Новостей не найдено</h3>
+        {% if current_user.is_authenticated %}
+        <p>Выберите источники новостей в настройках или дождитесь загрузки свежих новостей.</p>
+        <a href="{{ url_for('settings') }}" class="btn btn-primary">
+            <i class="fas fa-cog"></i> Настроить источники
+        </a>
+        {% else %}
+        <p>В данный момент новости загружаются. Попробуйте обновить страницу через несколько минут.</p>
+        <button onclick="window.location.reload()" class="btn btn-primary">
+            <i class="fas fa-refresh"></i> Обновить страницу
+        </button>
+        {% endif %}
     </div>
-</body>
-</html>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if articles.pages > 1 %}
+<div class="pagination-wrapper">
+    <nav class="pagination">
+        {% if articles.has_prev %}
+        <a href="{{ url_for('index', page=articles.prev_num) }}" class="pagination-btn">
+            <i class="fas fa-chevron-left"></i> Предыдущая
+        </a>
+        {% endif %}
+
+        <div class="pagination-info">
+            Страница {{ articles.page }} из {{ articles.pages }}
+        </div>
+
+        {% if articles.has_next %}
+        <a href="{{ url_for('index', page=articles.next_num) }}" class="pagination-btn">
+            Следующая <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+{% endblock %}

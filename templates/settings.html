@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки источников - Новостной Агрегатор{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h1><i class="fas fa-cog"></i> Настройки источников</h1>
+        <p class="settings-subtitle">Выберите источники новостей, которые вас интересуют</p>
+    </div>
+
+    <form method="POST" class="settings-form">
+        {{ form.hidden_tag() }}
+        
+        <div class="sources-grid">
+            {% for subfield in form.sources %}
+            <div class="source-item">
+                <label class="source-label">
+                    {{ subfield() }}
+                    <span class="source-name">{{ subfield.label.text }}</span>
+                    <div class="source-check">
+                        <i class="fas fa-check"></i>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if form.sources.choices|length == 0 %}
+        <div class="empty-sources">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Источники не найдены</h3>
+            <p>Пока что в системе нет доступных источников новостей. Обратитесь к администратору.</p>
+        </div>
+        {% endif %}
+
+        <div class="settings-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Сохранить настройки
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Назад к новостям
+            </a>
+        </div>
+    </form>
+
+    <div class="settings-info">
+        <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> Как это работает</h3>
+            <ul>
+                <li>Выберите интересующие вас источники новостей</li>
+                <li>В ленте будут отображаться только новости из выбранных источников</li>
+                <li>Если ничего не выбрано, показываются новости из всех источников</li>
+                <li>Настройки сохраняются автоматически после нажатия кнопки</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/news_aggregator
+      - SECRET_KEY=06e9d18a3b5543e3be6e2500e9366a79
+      - NEWS_API_KEY=06e9d18a3b5543e3be6e2500e9366a79
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    command: python app.py
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: news_aggregator
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
