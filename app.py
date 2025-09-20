@@ -158,4 +158,5 @@ if __name__ == '__main__':
         db.create_all()
         # Запускаем фоновые задачи
         start_background_tasks()
-    app.run(debug=True)
+    # Для Docker нужно слушать все интерфейсы (0.0.0.0)
+    app.run(host='0.0.0.0', port=5000, debug=True)
