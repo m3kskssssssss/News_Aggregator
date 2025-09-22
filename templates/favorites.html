@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Избранное - Новостной Агрегатор{% endblock %}
+
+{% block content %}
+
+<div class="news-grid">
+    {% for article in articles.items %}
+    <article class="news-card modern-card" id="article-{{ article.id }}">
+        {% if article.url_to_image %}
+        <div class="news-image">
+            <img src="{{ article.url_to_image }}" alt="{{ article.title }}" loading="lazy"
+                 onerror="this.onerror=null;this.src='/static/img/news_placeholder.png';">
+            <div class="image-overlay">
+                <span class="source-badge">{{ article.source.name }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="news-content">
+            <div class="news-meta">
+                <span class="publish-date">
+                    <i class="fas fa-clock"></i>
+                    {{ article.published_at.strftime('%d.%m.%Y %H:%M') }}
+                </span>
+                <span class="category-badge">{{ article.source.category or 'Общее' }}</span>
+            </div>
+
+            <h2 class="news-title">
+                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">
+                    {{ article.title }}
+                </a>
+            </h2>
+
+            <p class="news-summary">
+                {{ article.summary or article.description[:200] + '...' if article.description and article.description|length > 200 else article.description or '' }}
+            </p>
+
+            <div class="news-actions">
+                <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more-btn">
+                    <i class="fas fa-external-link-alt"></i> Читать полностью
+                </a>
+
+                <div class="action-buttons">
+                    <!-- Кнопка поделиться -->
+                    <button 
+                        class="action-btn share-btn" 
+                        title="Поделиться" 
+                        data-url="{{ article.url }}">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+
+                    <!-- Кнопка избранного (на favorites — уже активна) -->
+                    <button 
+                        class="action-btn bookmark-btn active" 
+                        title="Убрать из избранного" 
+                        data-article-id="{{ article.id }}">
+                        <i class="fas fa-bookmark"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </article>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-bookmark empty-icon"></i>
+        <h3>У вас пока нет избранных статей</h3>
+        <p>
+            Нажимайте на 
+            <i class="fas fa-bookmark inline-icon"></i> 
+            у новостей, чтобы добавить их в избранное.
+        </p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary home-btn">
+            <i class="fas fa-home"></i> На главную
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Пагинация -->
+{% if articles.pages > 1 %}
+<div class="pagination-wrapper">
+    <nav class="pagination">
+        {% if articles.has_prev %}
+        <a href="{{ url_for('favorites', page=articles.prev_num) }}" class="pagination-btn">
+            <i class="fas fa-chevron-left"></i> Предыдущая
+        </a>
+        {% endif %}
+
+        <div class="pagination-info">
+            Страница {{ articles.page }} из {{ articles.pages }}
+        </div>
+
+        {% if articles.has_next %}
+        <a href="{{ url_for('favorites', page=articles.next_num) }}" class="pagination-btn">
+            Следующая <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+
+{% endblock %}
+

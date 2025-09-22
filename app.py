@@ -1,6 +1,6 @@
-#news_aggregator/app.py
+# news_aggregator/app.py
 
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from config import Config
 from models import db, User, NewsSource, Article
@@ -127,7 +127,7 @@ def settings():
 
     if form.validate_on_submit():
         # Очищаем текущие источники пользователя
-        current_user.selected_sources.clear()
+        current_user.selected_sources = []
 
         # Добавляем выбранные источники
         selected_source_ids = form.sources.data
@@ -151,6 +151,34 @@ def settings():
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
     return render_template('article_detail.html', article=article)
+
+
+# 🔹 Добавляем избранное
+@app.route('/favorite/toggle/<int:article_id>', methods=['POST'])
+@login_required
+def toggle_favorite(article_id):
+    article = Article.query.get_or_404(article_id)
+
+    if current_user.is_favorite(article):
+        current_user.remove_favorite(article)
+        status = 'removed'
+    else:
+        current_user.add_favorite(article)
+        status = 'added'
+
+    return jsonify({'status': status})
+
+
+@app.route('/favorites')
+@login_required
+def favorites():
+    page = request.args.get('page', 1, type=int)
+    per_page = app.config.get('POSTS_PER_PAGE', 10)
+
+    favorites_query = Article.query.join(User.favorites).filter(User.id == current_user.id).order_by(Article.published_at.desc())
+    articles = favorites_query.paginate(page=page, per_page=per_page, error_out=False)
+
+    return render_template('favorites.html', articles=articles)
 
 
 if __name__ == '__main__':

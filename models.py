@@ -1,4 +1,4 @@
-#news_aggregator/models.py
+# news_aggregator/models.py
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
@@ -8,10 +8,19 @@ from datetime import datetime
 db = SQLAlchemy()
 
 # Таблица связи многие-ко-многим для пользователей и источников новостей
-user_sources = db.Table('user_sources',
-                        db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-                        db.Column('source_id', db.Integer, db.ForeignKey('news_source.id'), primary_key=True)
-                        )
+user_sources = db.Table(
+    'user_sources',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('source_id', db.Integer, db.ForeignKey('news_source.id'), primary_key=True)
+)
+
+# Таблица связи многие-ко-многим для избранных статей пользователей
+user_favorites = db.Table(
+    'user_favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('article_id', db.Integer, db.ForeignKey('article.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=datetime.utcnow)
+)
 
 
 class User(UserMixin, db.Model):
@@ -22,14 +31,43 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Связь с источниками новостей
-    selected_sources = db.relationship('NewsSource', secondary=user_sources,
-                                       backref=db.backref('users', lazy='dynamic'))
+    selected_sources = db.relationship(
+        'NewsSource',
+        secondary=user_sources,
+        backref=db.backref('users', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
-    def set_password(self, password):
+    # Избранные статьи (many-to-many через user_favorites)
+    # lazy='select' чтобы current_user.favorites.append/remove работали привычно
+    favorites = db.relationship(
+        'Article',
+        secondary=user_favorites,
+        backref=db.backref('favorited_by', lazy='dynamic'),
+        lazy='select'
+    )
+
+    def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
+
+    def add_favorite(self, article):
+        """Добавить статью в избранное (если ещё не добавлена)."""
+        if article not in self.favorites:
+            self.favorites.append(article)
+            db.session.commit()
+
+    def remove_favorite(self, article):
+        """Удалить статью из избранного (если есть)."""
+        if article in self.favorites:
+            self.favorites.remove(article)
+            db.session.commit()
+
+    def is_favorite(self, article) -> bool:
+        """Проверить, в избранном ли статья."""
+        return article in self.favorites
 
     def __repr__(self):
         return f'<User {self.username}>'

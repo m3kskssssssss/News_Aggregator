@@ -39,18 +39,29 @@
                 </a>
             </h2>
 
-            <p class="news-summary">{{ article.summary or article.description[:200] + '...' if article.description and article.description|length > 200 else article.description or '' }}</p>
+            <p class="news-summary">
+                {{ article.summary or article.description[:200] + '...' if article.description and article.description|length > 200 else article.description or '' }}
+            </p>
 
             <div class="news-actions">
                 <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="read-more-btn">
                     <i class="fas fa-external-link-alt"></i> Читать полностью
                 </a>
                 <div class="action-buttons">
-                    <button class="action-btn share-btn" title="Поделиться">
-                        <i class="fas fa-share"></i>
-                    </button>
-                    <button class="action-btn bookmark-btn" title="В закладки">
+                    <!-- Кнопка избранного -->
+                    <button 
+                        class="action-btn bookmark-btn {% if current_user.is_authenticated and current_user.is_favorite(article) %}active{% endif %}" 
+                        title="В закладки" 
+                        data-article-id="{{ article.id }}">
                         <i class="fas fa-bookmark"></i>
+                    </button>
+
+                    <!-- Кнопка поделиться -->
+                    <button 
+                        class="action-btn share-btn" 
+                        title="Поделиться" 
+                        data-url="{{ article.url }}">
+                        <i class="fas fa-share-alt"></i>
                     </button>
                 </div>
             </div>
@@ -97,4 +108,46 @@
     </nav>
 </div>
 {% endif %}
+
+<!-- JS для избранного и кнопки поделиться -->
+{% if current_user.is_authenticated %}
+<script>
+document.querySelectorAll(".bookmark-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+        const articleId = this.dataset.articleId;
+        fetch(`/favorite/toggle/${articleId}`, {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "added") {
+                this.classList.add("active");
+            } else {
+                this.classList.remove("active");
+            }
+        })
+        .catch(err => console.error("Ошибка:", err));
+    });
+});
+</script>
+{% endif %}
+
+<script>
+document.querySelectorAll(".share-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+        const url = this.dataset.url;
+        if (navigator.share) {
+            navigator.share({
+                title: document.title,
+                url: url
+            }).catch(err => console.log("Ошибка:", err));
+        } else {
+            // fallback для ПК
+            const shareText = `Поделиться ссылкой: ${url}`;
+            prompt("Скопируйте ссылку и поделитесь:", shareText);
+        }
+    });
+});
+</script>
 {% endblock %}

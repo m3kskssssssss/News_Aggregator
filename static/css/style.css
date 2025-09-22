@@ -299,15 +299,17 @@ body {
 /* Изображение новости */
 .news-image {
     position: relative;
-    height: 220px;
+    width: 100%;
+    height: 200px; /* фиксированная высота */
     overflow: hidden;
+    border-radius: 8px 8px 0 0;
 }
 
 .news-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s ease;
+    object-fit: cover; /* чтобы картинка не обрезалась */
+    display: block; /* убрать случайный inline-gap */
 }
 
 .modern-card:hover .news-image img {
@@ -893,4 +895,87 @@ body {
 
 .action-btn:active {
     animation: pulse 0.3s ease;
+}
+
+/* Кнопка закладок */
+.action-btn.bookmark-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--background-color);
+    color: var(--primary-color); /* обычный цвет */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* При наведении */
+.action-btn.bookmark-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Когда новость в избранном */
+.action-btn.bookmark-btn.active {
+    background: var(--primary-color); /* черный фон */
+    color: white;                     /* белая иконка */
+    border-color: var(--primary-color);
+}
+
+/* Кнопка репоста */
+.action-btn.share-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--background-color);
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn.share-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Иконка сверху в пустом избранном */
+.empty-state .empty-icon {
+    font-size: 48px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Иконка в тексте */
+.empty-state .inline-icon {
+    font-size: 16px;
+    margin: 0 4px;
+    vertical-align: middle;
+    color: #333;
+}
+
+/* Кнопка "На главную" */
+.empty-state .home-btn {
+    display: inline-flex;       /* иконка + текст в одну линию */
+    align-items: center;        /* выравнивание по вертикали */
+    justify-content: center;    /* выравнивание всего содержимого по центру */
+    gap: 10px;                  /* расстояние между иконкой и текстом */
+    margin-top: 15px;
+    padding: 12px 24px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Иконка внутри кнопки */
+.empty-state .home-btn i {
+    font-size: 20px;
+    color: #fff;
+    vertical-align: middle; /* ключевое свойство */
+    line-height: 1;
 }

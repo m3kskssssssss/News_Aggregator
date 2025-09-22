@@ -35,6 +35,9 @@
                     <li><a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}">
                         <i class="fas fa-cog"></i> Источники
                     </a></li>
+                    <li><a href="{{ url_for('favorites') }}" class="nav-link {% if request.endpoint == 'favorites' %}active{% endif %}">
+                        <i class="fas fa-bookmark"></i> Избранное
+                    </a></li>
                 </ul>
             </nav>
 
