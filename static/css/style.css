@@ -974,8 +974,492 @@ body {
 
 /* Иконка внутри кнопки */
 .empty-state .home-btn i {
-    font-size: 20px;
+    font-size: 0px;
     color: #fff;
     vertical-align: middle; /* ключевое свойство */
     line-height: 1;
+}
+
+/* Пустое состояние */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--border-color);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #000000; /* изменено с var(--text-secondary) на черный */
+    margin-bottom: 1.5rem;
+}
+
+/* Иконка сверху в пустом избранном */
+.empty-state .empty-icon {
+    font-size: 48px;
+    color: #000000; /* изменено с #666 на черный */
+    margin-bottom: 10px;
+}
+
+/* Кнопка "На главную" */
+.empty-state .home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px auto 0; /* добавлен auto для лучшего центрирования */
+    padding: 12px 24px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Пустое состояние */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--card-background);
+    border-radius: var(--border-radius);
+    border: 2px dashed var(--border-color);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #000000; /* изменено с var(--text-secondary) на черный */
+    margin-bottom: 1.5rem;
+}
+
+/* Иконка сверху в пустом избранном */
+.empty-state .empty-icon {
+    font-size: 48px;
+    color: #000000; /* изменено с #666 на черный */
+    margin-bottom: 10px;
+}
+
+/* Кнопка "На главную" */
+.empty-state .home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px auto 0; /* добавлен auto для лучшего центрирования */
+    padding: 12px 24px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Исправленные стили для краткой выжимки - заменить в style.css */
+
+/* Кнопка краткой выжимки */
+.summary-button-container {
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.summary-btn {
+    background: #000000;
+    color: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.5px;
+}
+
+.summary-btn:hover:not(:disabled) {
+    background: #333333;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.summary-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.summary-btn i {
+    font-size: 18px;
+}
+
+.summary-loader {
+    margin-left: 4px;
+}
+
+/* Модальное окно */
+.summary-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+}
+
+.summary-modal-content {
+    position: relative;
+    background: #ffffff;
+    border: 3px solid #000000;
+    border-radius: 16px;
+    max-width: 800px;
+    max-height: 90vh;
+    width: 90%;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: summaryModalAppear 0.3s ease-out;
+}
+
+@keyframes summaryModalAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Заголовок модального окна */
+.summary-modal-header {
+    background: #000000;
+    color: #ffffff;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #000000;
+    border-radius: 13px 13px 0 0;
+}
+
+.summary-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.summary-close-btn {
+    background: none;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.summary-close-btn:hover {
+    background: #ffffff;
+    color: #000000;
+    border-radius: 12px;
+}
+
+/* Тело модального окна с красивой прокруткой */
+.summary-modal-body {
+    padding: 0;
+    max-height: calc(90vh - 80px);
+    overflow-y: auto;
+    /* Отступ справа для прокрутки */
+    margin-right: 4px;
+}
+
+/* Текст выжимки */
+.summary-text {
+    padding: 24px 28px 24px 24px;
+    border-bottom: 2px solid #000000;
+    background: #ffffff;
+}
+
+.summary-text p {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #000000;
+    font-weight: 500;
+    text-align: justify;
+}
+
+/* Список статей */
+.summary-articles {
+    background: #f8f8f8;
+    border-bottom: 2px solid #000000;
+}
+
+.summary-articles h3 {
+    margin: 0;
+    padding: 20px 28px 16px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #000000;
+}
+
+.summary-articles-list {
+    padding: 0 28px 24px 24px;
+}
+
+.summary-article-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.summary-article-item:last-child {
+    border-bottom: none;
+}
+
+.summary-article-number {
+    background: #000000;
+    color: #ffffff;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.summary-article-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.summary-article-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.summary-article-content h4 a {
+    color: #000000;
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s ease;
+    border-radius: 2px;
+}
+
+.summary-article-content h4 a:hover {
+    border-bottom-color: #000000;
+}
+
+.summary-article-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #666666;
+    font-weight: 500;
+}
+
+.summary-article-source {
+    font-weight: 600;
+    color: #000000;
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Метаинформация */
+.summary-meta {
+    background: #000000;
+    color: #ffffff;
+    padding: 16px 28px 16px 24px;
+    border-radius: 0 0 13px 13px;
+}
+
+.summary-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.summary-stats span {
+    padding: 6px 12px;
+    border: 1px solid #333333;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+}
+
+/* Красивый скроллбар */
+.summary-modal-body::-webkit-scrollbar {
+    width: 14px;
+}
+
+.summary-modal-body::-webkit-scrollbar-track {
+    background: #f8f8f8;
+    border-radius: 10px;
+    margin: 8px 0;
+    border: 1px solid #e0e0e0;
+}
+
+.summary-modal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #333333, #000000);
+    border-radius: 10px;
+    border: 2px solid #f8f8f8;
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.summary-modal-body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #555555, #222222);
+    border: 2px solid #f0f0f0;
+}
+
+.summary-modal-body::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(45deg, #111111, #000000);
+}
+
+/* Скроллбар для Firefox */
+.summary-modal-body {
+    scrollbar-width: auto;
+    scrollbar-color: #333333 #f8f8f8;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .summary-modal-content {
+        width: 95%;
+        max-height: 95vh;
+        margin: 2.5vh auto;
+        border-radius: 12px;
+    }
+
+    .summary-modal-header {
+        padding: 16px 20px;
+        border-radius: 9px 9px 0 0;
+    }
+
+    .summary-modal-header h2 {
+        font-size: 18px;
+    }
+
+    .summary-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+    }
+
+    .summary-close-btn:hover {
+        border-radius: 8px;
+    }
+
+    .summary-modal-body {
+        margin-right: 2px;
+    }
+
+    .summary-text {
+        padding: 20px 24px 20px 20px;
+    }
+
+    .summary-text p {
+        font-size: 16px;
+    }
+
+    .summary-articles h3 {
+        padding: 16px 24px 12px 20px;
+        font-size: 15px;
+    }
+
+    .summary-articles-list {
+        padding: 0 24px 20px 20px;
+    }
+
+    .summary-article-item {
+        gap: 12px;
+        padding: 12px 0;
+    }
+
+    .summary-article-number {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+
+    .summary-article-content h4 {
+        font-size: 15px;
+    }
+
+    .summary-article-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .summary-meta {
+        padding: 12px 24px 12px 20px;
+        border-radius: 0 0 9px 9px;
+    }
+
+    .summary-stats {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .summary-stats span {
+        border-radius: 6px;
+    }
+
+    .summary-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+
+    /* Мобильный скроллбар */
+    .summary-modal-body::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .summary-modal-body::-webkit-scrollbar-track {
+        border-radius: 8px;
+        margin: 6px 0;
+    }
+
+    .summary-modal-body::-webkit-scrollbar-thumb {
+        border-radius: 8px;
+        border: 1px solid #f8f8f8;
+    }
 }

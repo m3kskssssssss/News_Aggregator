@@ -172,6 +172,15 @@ def clear_users():
         click.echo('Нет пользователей для удаления или операция отменена.')
 
 
+@click.command()
+@with_appcontext
+def fetch_rss():
+    """Загрузка новостей из RSS"""
+    from rss_fetcher import fetch_rss_sources
+    count = fetch_rss_sources()
+    click.echo(f'Загружено {count} статей из RSS.')
+
+# В функции register_commands добавьте:
 def register_commands(app):
     """Регистрация всех команд в приложении"""
     app.cli.add_command(init_db)
@@ -186,3 +195,4 @@ def register_commands(app):
     app.cli.add_command(stats)
     app.cli.add_command(clear_users)
     app.cli.add_command(auto_update_news)
+    app.cli.add_command(fetch_rss)  # Добавить эту строку

@@ -3,6 +3,156 @@
 {% block title %}Главная - Новостной Агрегатор{% endblock %}
 
 {% block content %}
+{% if current_user.is_authenticated %}
+<div class="summary-button-container">
+    <button id="generateSummary" class="summary-btn">
+        <i class="fas fa-list-alt"></i>
+        <span>Краткая выжимка</span>
+        <div class="summary-loader" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+    </button>
+</div>
+
+<!-- JavaScript для выжимки -->
+{% if current_user.is_authenticated %}
+<script>
+// Обработчик для краткой выжимки
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generateSummary');
+    if (!generateBtn) {
+        console.log('Кнопка generateSummary не найдена');
+        return;
+    }
+
+    generateBtn.addEventListener('click', async function() {
+        console.log('Кнопка нажата!');
+
+        const btn = this;
+        const loader = btn.querySelector('.summary-loader');
+        const text = btn.querySelector('span');
+
+        // Показываем загрузку
+        btn.disabled = true;
+        if (loader) loader.style.display = 'inline-block';
+        if (text) text.textContent = 'Генерируем...';
+
+        try {
+            console.log('Отправляем запрос...');
+            const response = await fetch('/api/news-summary', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            console.log('Получен ответ:', response.status);
+            const result = await response.json();
+            console.log('Данные:', result);
+
+            if (result.success) {
+                showSummaryModal(result.data);
+            } else {
+                alert('Ошибка: ' + (result.error || 'Не удалось создать выжимку'));
+            }
+        } catch (error) {
+            console.error('Ошибка при получении выжимки:', error);
+            alert('Не удалось создать выжимку: ' + error.message);
+        } finally {
+            // Скрываем загрузку
+            btn.disabled = false;
+            if (loader) loader.style.display = 'none';
+            if (text) text.textContent = 'Краткая выжимка';
+        }
+    });
+});
+
+// Функция показа модального окна
+function showSummaryModal(data) {
+    console.log('Показываем модальное окно:', data);
+
+    const modal = document.getElementById('summaryModal');
+    if (!modal) {
+        alert('Модальное окно не найдено');
+        return;
+    }
+
+    const summaryText = modal.querySelector('.summary-text');
+    const articlesList = modal.querySelector('.summary-articles-list');
+    const summaryMeta = modal.querySelector('.summary-meta');
+
+    // Заполняем текст выжимки
+    if (summaryText) {
+        summaryText.innerHTML = `<p>${data.summary}</p>`;
+    }
+
+    // Заполняем список статей
+    if (articlesList && data.top_articles) {
+        articlesList.innerHTML = '';
+        data.top_articles.forEach((article, index) => {
+            const articleElement = document.createElement('div');
+            articleElement.className = 'summary-article-item';
+            articleElement.innerHTML = `
+                <div class="summary-article-number">${index + 1}</div>
+                <div class="summary-article-content">
+                    <h4><a href="${article.url}" target="_blank">${article.title}</a></h4>
+                    <div class="summary-article-meta">
+                        <span class="summary-article-source">${article.source}</span>
+                        <span class="summary-article-time">${new Date(article.published_at).toLocaleString('ru-RU')}</span>
+                    </div>
+                </div>
+            `;
+            articlesList.appendChild(articleElement);
+        });
+    }
+
+    // Метаинформация
+    if (summaryMeta) {
+        summaryMeta.innerHTML = `
+            <div class="summary-stats">
+                <span>Создано: ${data.generated_at}</span>
+                <span>Источников: ${data.total_sources || 0}</span>
+                <span>Статей: ${data.top_articles ? data.top_articles.length : 0}</span>
+            </div>
+        `;
+    }
+
+    // Показываем модальное окно
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+// Закрытие модального окна
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('closeSummary');
+    const overlay = document.querySelector('.summary-modal-overlay');
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSummaryModal);
+    }
+    if (overlay) {
+        overlay.addEventListener('click', closeSummaryModal);
+    }
+
+    // Закрытие по Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSummaryModal();
+        }
+    });
+});
+
+function closeSummaryModal() {
+    const modal = document.getElementById('summaryModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+</script>
+{% endif %}
+{% endif %}
+
 <div class="news-grid">
     {% for article in articles.items %}
     <article class="news-card modern-card">
@@ -108,7 +258,35 @@
     </nav>
 </div>
 {% endif %}
+<!-- Модальное окно для выжимки -->
+{% if current_user.is_authenticated %}
+<div id="summaryModal" class="summary-modal">
+    <div class="summary-modal-overlay"></div>
+    <div class="summary-modal-content">
+        <div class="summary-modal-header">
+            <h2>Краткая выжимка новостей</h2>
+            <button id="closeSummary" class="summary-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
+        <div class="summary-modal-body">
+
+
+            <div class="summary-articles">
+                <h3>Топ новостей:</h3>
+                <div class="summary-articles-list">
+                    <!-- Здесь будет список статей -->
+                </div>
+            </div>
+
+            <div class="summary-meta">
+                <!-- Метаинформация о выжимке -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 <!-- JS для избранного и кнопки поделиться -->
 {% if current_user.is_authenticated %}
 <script>

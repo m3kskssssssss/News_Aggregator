@@ -181,6 +181,49 @@ def favorites():
     return render_template('favorites.html', articles=articles)
 
 
+@app.route('/api/news-summary')
+@login_required
+def news_summary():
+    """API endpoint для генерации краткой выжимки новостей (БЕЗ LLM)"""
+    try:
+        # Получаем статьи пользователя
+        if current_user.selected_sources:
+            source_ids = [source.id for source in current_user.selected_sources]
+            articles = Article.query.filter(
+                Article.source_id.in_(source_ids)
+            ).order_by(Article.published_at.desc()).limit(15).all()
+        else:
+            # Если источники не выбраны, берем все новости
+            articles = Article.query.order_by(
+                Article.published_at.desc()
+            ).limit(15).all()
+
+        # Импортируем функцию генерации выжимки
+        from summary_generator import generate_news_summary, get_summary_statistics
+
+        # Генерируем выжимку (быстро, без внешних API)
+        summary_data = generate_news_summary(articles, max_articles=5)
+        stats = get_summary_statistics(articles)
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'summary': summary_data['summary'],
+                'top_articles': summary_data['top_articles'],
+                'generated_at': summary_data['generated_at'].strftime('%d.%m.%Y %H:%M'),
+                'total_sources': len(set([a['source'] for a in summary_data['top_articles']])),
+                'statistics': stats
+            }
+        })
+
+    except Exception as e:
+        print(f"Ошибка генерации выжимки: {e}")
+        return jsonify({
+            'success': False,
+            'error': 'Не удалось создать выжимку. Попробуйте позже.'
+        }), 500
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()

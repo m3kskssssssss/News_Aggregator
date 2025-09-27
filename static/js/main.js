@@ -128,3 +128,42 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("main.js init error", err);
     }
 });
+
+<!-- JavaScript -->
+<script>
+// Обработчик для краткой выжимки
+document.getElementById('generateSummary').addEventListener('click', async function() {
+    const btn = this;
+    const loader = btn.querySelector('.summary-loader');
+    const text = btn.querySelector('span');
+
+    // Показываем загрузку
+    btn.disabled = true;
+    loader.style.display = 'inline-block';
+    text.textContent = 'Генерируем...';
+
+    try {
+        const response = await fetch('/api/news-summary', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showSummaryModal(result.data);
+        } else {
+            alert('Ошибка: ' + (result.error || 'Не удалось создать выжимку'));
+        }
+    } catch (error) {
+        console.error('Ошибка при получении выжимки:', error);
+        alert('Не удалось создать выжимку. Попробуйте позже.');
+    } finally {
+        // Скрываем загрузку
+        btn.disabled = false;
+        loader.style.display = 'none';
+        text.textContent = 'Краткая выжимка';
+    }
+});
