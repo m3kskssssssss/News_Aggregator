@@ -3,6 +3,33 @@
 {% block title %}Главная - Новостной Агрегатор{% endblock %}
 
 {% block content %}
+<!-- Поиск по новостям -->
+<div class="search-container">
+    <form method="get" action="{{ url_for('index') }}" class="search-form">
+        <input 
+            type="text" 
+            name="q" 
+            placeholder="Поиск новостей..." 
+            value="{{ q or '' }}" 
+            class="search-input"
+        >
+        <button type="submit" class="search-btn">
+            <i class="fas fa-search"></i>
+        </button>
+    </form>
+</div>
+
+{% if q %}
+<div class="search-results-info">
+    {% if articles.total > 0 %}
+        Найдено <strong>{{ articles.total }}</strong> новостей по запросу «<strong>{{ q }}</strong>»
+    {% else %}
+        Ничего не найдено по запросу «<strong>{{ q }}</strong>»
+    {% endif %}
+</div>
+{% endif %}
+
+
 {% if current_user.is_authenticated %}
 <div class="summary-button-container">
     <button id="generateSummary" class="summary-btn">
@@ -272,16 +299,15 @@ function closeSummaryModal() {
 
         <div class="summary-modal-body">
 
-
             <div class="summary-articles">
                 <h3>Топ новостей:</h3>
+                <!-- Здесь будет список статей -->
                 <div class="summary-articles-list">
-                    <!-- Здесь будет список статей -->
                 </div>
             </div>
-
+            
+            <!-- Метаинформация о выжимке -->
             <div class="summary-meta">
-                <!-- Метаинформация о выжимке -->
             </div>
         </div>
     </div>

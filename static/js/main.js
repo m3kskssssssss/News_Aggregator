@@ -129,8 +129,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-<!-- JavaScript -->
-<script>
+
 // Обработчик для краткой выжимки
 document.getElementById('generateSummary').addEventListener('click', async function() {
     const btn = this;
@@ -166,4 +165,26 @@ document.getElementById('generateSummary').addEventListener('click', async funct
         loader.style.display = 'none';
         text.textContent = 'Краткая выжимка';
     }
+});
+
+// "Настройки источников сохранены!" сама исчезает и закрывается по кнопке
+document.addEventListener("DOMContentLoaded", function() {
+    const alerts = document.querySelectorAll(".alert");
+
+    alerts.forEach(alert => {
+        // Кнопка закрытия (если есть)
+        const closeBtn = alert.querySelector(".close-alert");
+        if (closeBtn) {
+            closeBtn.addEventListener("click", () => {
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 300);
+            });
+        }
+
+        // Автоудаление через 3 секунды
+        setTimeout(() => {
+            alert.style.opacity = "0";
+            setTimeout(() => alert.remove(), 300);
+        }, 3000);
+    });
 });

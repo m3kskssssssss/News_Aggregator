@@ -62,16 +62,36 @@ def start_background_tasks():
 @app.route('/')
 def index():
     page = request.args.get('page', 1, type=int)
+    q = request.args.get('q', "").strip()
 
     if current_user.is_authenticated:
         # Для авторизованных пользователей - персональная лента
         articles = get_user_articles(current_user, page, app.config['POSTS_PER_PAGE'])
+        if q:
+            # Поиск только по статьям пользователя
+            articles = Article.query.filter(
+                (Article.title.ilike(f"%{q}%")) |
+                (Article.summary.ilike(f"%{q}%")) |
+                (Article.description.ilike(f"%{q}%"))
+            ).order_by(Article.published_at.desc()).paginate(
+                page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
+            )
     else:
         # Для неавторизованных - все новости
-        articles = Article.query.order_by(Article.published_at.desc()).paginate(
-            page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False)
+        if q:
+            articles = Article.query.filter(
+                (Article.title.ilike(f"%{q}%")) |
+                (Article.summary.ilike(f"%{q}%")) |
+                (Article.description.ilike(f"%{q}%"))
+            ).order_by(Article.published_at.desc()).paginate(
+                page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
+            )
+        else:
+            articles = Article.query.order_by(Article.published_at.desc()).paginate(
+                page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
+            )
 
-    return render_template('index.html', articles=articles)
+    return render_template('index.html', articles=articles, q=q)
 
 
 @app.route('/login', methods=['GET', 'POST'])
