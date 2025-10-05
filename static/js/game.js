@@ -47,31 +47,65 @@ class NewsFlappyGame {
 
     init() {
         console.log('Инициализация игры...');
-        console.log('Размер канваса:', this.canvas.width, 'x', this.canvas.height);
 
-        // Загружаем случайные статьи
         this.loadRandomArticles();
 
-        // Обработчики событий
-        this.canvas.addEventListener('click', () => this.handleInput());
+        // Универсальный обработчик ввода
+        const handleGameInput = (e) => {
+            if (e) e.preventDefault();
+
+            // Проверяем, активно ли игровое окно
+            if (this.gameState === 'start' && this.startScreen.style.display !== 'none') {
+                this.startGame();
+            } else if (this.gameState === 'playing') {
+                this.jump();
+            }
+        };
+
+        // Десктоп события
+        this.canvas.addEventListener('click', handleGameInput);
+
+        // Мобильные события
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // Сохраняем позицию тача для возможной будущей логики
+            this.lastTouchY = e.touches[0].clientY;
+        });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleGameInput();
+        });
+
+        // Клавиатура
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
-                this.handleInput();
+                handleGameInput();
             }
         });
 
-        // Кнопки
-        document.getElementById('playAgainBtn').addEventListener('click', () => this.restart());
-        document.getElementById('restartBtn').addEventListener('click', () => this.restart());
-        document.getElementById('readArticleBtn').addEventListener('click', () => this.readArticle());
+        // Обработчики для кнопок
+        const setupButton = (id, method) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                const handler = () => {
+                    this[method]();
+                };
+                btn.addEventListener('click', handler);
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    handler();
+                });
+            }
+        };
 
-        // Обновляем UI
+        setupButton('playAgainBtn', 'restart');
+        setupButton('restartBtn', 'restart');
+        setupButton('readArticleBtn', 'readArticle');
+
         this.updateUI();
-
-        // Запускаем игровой цикл
         this.gameLoop();
-
         console.log('Игра инициализирована!');
     }
 

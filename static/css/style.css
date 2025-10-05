@@ -2734,3 +2734,47 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* Улучшение для мобильных устройств */
+#gameCanvas {
+    touch-action: manipulation; /* Улучшает отзывчивость */
+    -webkit-tap-highlight-color: transparent; /* Убирает синее выделение при тапе */
+}
+
+/* Кнопки для мобильных */
+.game-btn {
+    min-height: 44px; /* Минимальный размер для сенсорных экранов */
+    min-width: 44px;
+    padding: 12px 20px;
+    font-size: 16px; /* Увеличиваем текст для удобства */
+    cursor: pointer;
+    border: none;
+    background: #000;
+    color: white;
+    border-radius: 8px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+/* Убираем выделение при тапе на мобильных */
+.game-btn:active {
+    background: #333;
+}
+
+/* Адаптивные стили для экранов меньше 768px */
+@media (max-width: 768px) {
+    #gameCanvas {
+        width: 100% !important;
+        height: 70vh !important;
+        max-height: 500px;
+    }
+
+    .screen {
+        padding: 20px;
+    }
+
+    .game-btn {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
