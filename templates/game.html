@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Игра: Случайная новость - Новостной Агрегатор{% endblock %}
+
+{% block content %}
+<div class="game-container">
+        <!-- Игровое поле -->
+    <div class="game-wrapper">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Экран старта -->
+        <div id="startScreen" class="game-screen">
+            <div class="screen-content">
+                <h2>СЛУЧАЙНАЯ НОВОСТЬ</h2>
+                <p>Нажми ПРОБЕЛ или КЛИКНИ для начала</p>
+                <div class="controls-hint">
+                    <div class="control-item">
+                        <i class="fas fa-keyboard"></i>
+                        <span>ПРОБЕЛ - прыжок</span>
+                    </div>
+                    <div class="control-item">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <span>КЛИК - прыжок</span>
+                    </div>
+                </div>
+                <div class="game-rules">
+                    <h3>Правила:</h3>
+                    <ul>
+                        <li>Прыгай через черные блоки</li>
+                        <li>Не застревай между блоками!</li>
+                        <li>Не улетай за верхнюю границу</li>
+                        <li>Упади на статью - прочитай её!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран паузы (приземление на статью) -->
+        <div id="pauseScreen" class="game-screen" style="display: none;">
+            <div class="screen-content">
+                <h2>ПАУЗА</h2>
+                <p>Ты приземлился на новость!</p>
+                <div id="landedArticle" class="landed-article"></div>
+                <div class="pause-actions">
+                    <button id="readArticleBtn" class="game-btn primary">
+                        <i class="fas fa-external-link-alt"></i> Читать статью
+                    </button>
+                    <button id="playAgainBtn" class="game-btn secondary">
+                        <i class="fas fa-redo"></i> Играть еще раз
+                    </button>
+                    <a href="{{ url_for('index') }}" class="game-btn tertiary">
+                        <i class="fas fa-home"></i> На главную
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран проигрыша -->
+        <div id="gameOverScreen" class="game-screen" style="display: none;">
+            <div class="screen-content">
+                <h2>GAME OVER</h2>
+                <p class="death-message">Game Over!</p>
+                <div class="score-display">
+                    <span class="score-label">Счет:</span>
+                    <span id="finalScore" class="score-value">0</span>
+                </div>
+                <div class="pause-actions">
+                    <button id="restartBtn" class="game-btn primary">
+                        <i class="fas fa-redo"></i> Попробовать снова
+                    </button>
+                    <a href="{{ url_for('index') }}" class="game-btn tertiary">
+                        <i class="fas fa-home"></i> На главную
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация о игре -->
+    <div class="game-info">
+        <div class="info-panel">
+            <div class="info-item">
+                <i class="fas fa-trophy"></i>
+                <div>
+                    <span class="info-label">Текущий счет</span>
+                    <span id="currentScore" class="info-value">0</span>
+                </div>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-star"></i>
+                <div>
+                    <span class="info-label">Лучший результат</span>
+                    <span id="bestScore" class="info-value">0</span>
+                </div>
+            </div>
+            <div class="info-item">
+                <i class="fas fa-newspaper"></i>
+                <div>
+                    <span class="info-label">Новостей прочитано</span>
+                    <span id="articlesRead" class="info-value">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Подключаем игровую логику -->
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% endblock %}

@@ -1,4 +1,4 @@
-# news_aggregator/app.py - ПОЛНАЯ ВЕРСИЯ
+# news_aggregator/app.py - С ДОБАВЛЕНИЕМ ИГРЫ
 
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -10,6 +10,7 @@ from cli_commands import register_commands
 from datetime import datetime
 import threading
 import time
+import random
 
 
 def create_app():
@@ -73,8 +74,8 @@ def index():
                 (Article.summary.ilike(f"%{q}%")) |
                 (Article.description.ilike(f"%{q}%"))
             ).order_by(
-                Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
-                Article.published_at.desc()                # Потом по дате
+                Article.url_to_image.isnot(None).desc(),
+                Article.published_at.desc()
             ).paginate(
                 page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
             )
@@ -85,14 +86,14 @@ def index():
                 (Article.summary.ilike(f"%{q}%")) |
                 (Article.description.ilike(f"%{q}%"))
             ).order_by(
-                Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+                Article.url_to_image.isnot(None).desc(),
                 Article.published_at.desc()
             ).paginate(
                 page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
             )
         else:
             articles = Article.query.order_by(
-                Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+                Article.url_to_image.isnot(None).desc(),
                 Article.published_at.desc()
             ).paginate(
                 page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
@@ -153,10 +154,7 @@ def settings():
     form = SourceSelectionForm()
 
     if form.validate_on_submit():
-        # Очищаем текущие источники пользователя
         current_user.selected_sources = []
-
-        # Добавляем выбранные источники
         selected_source_ids = form.sources.data
         for source_id in selected_source_ids:
             source = NewsSource.query.get(source_id)
@@ -167,7 +165,6 @@ def settings():
         flash('Настройки источников сохранены!', 'success')
         return redirect(url_for('index'))
 
-    # Предзаполняем форму текущими настройками
     if request.method == 'GET':
         form.sources.data = [source.id for source in current_user.selected_sources]
 
@@ -204,7 +201,7 @@ def favorites():
     favorites_query = Article.query.join(User.favorites).filter(
         User.id == current_user.id
     ).order_by(
-        Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+        Article.url_to_image.isnot(None).desc(),
         Article.published_at.desc()
     )
     articles = favorites_query.paginate(page=page, per_page=per_page, error_out=False)
@@ -212,17 +209,49 @@ def favorites():
     return render_template('favorites.html', articles=articles)
 
 
+@app.route('/game')
+@login_required
+def game():
+    """Страница игры - Случайная новость"""
+    return render_template('game.html')
+
+
+@app.route('/api/game/random-articles')
+@login_required
+def get_random_articles():
+    """API для получения случайных статей для игры"""
+    count = request.args.get('count', 5, type=int)
+
+    # Получаем случайные статьи
+    if current_user.selected_sources:
+        source_ids = [source.id for source in current_user.selected_sources]
+        articles = Article.query.filter(
+            Article.source_id.in_(source_ids)
+        ).order_by(db.func.random()).limit(count).all()
+    else:
+        articles = Article.query.order_by(db.func.random()).limit(count).all()
+
+    # Формируем данные для ответа
+    articles_data = []
+    for article in articles:
+        articles_data.append({
+            'id': article.id,
+            'title': article.title[:60] + '...' if len(article.title) > 60 else article.title,
+            'url': article.url,
+            'source': article.source.name
+        })
+
+    return jsonify({'articles': articles_data})
+
+
 @app.route('/api/news-summary')
 @login_required
 def news_summary():
     """API endpoint для генерации краткой выжимки новостей с фильтрацией по теме"""
     try:
-        # Получаем параметр темы из запроса
         topic = request.args.get('topic', None)
-
         print(f"🔍 Запрос выжимки. Тема: {topic}")
 
-        # Получаем статьи пользователя
         if current_user.selected_sources:
             source_ids = [source.id for source in current_user.selected_sources]
             articles_query = Article.query.filter(
@@ -230,16 +259,14 @@ def news_summary():
             ).order_by(Article.published_at.desc())
             print(f"📊 Пользователь выбрал {len(source_ids)} источников")
         else:
-            # Если источники не выбраны, берем все новости
             articles_query = Article.query.order_by(
                 Article.published_at.desc()
             )
             print(f"📊 Используем все источники")
 
-        # Если указана тема, фильтруем по ней
         if topic:
             from summary_generator import filter_articles_by_topic
-            all_articles = articles_query.limit(100).all()  # Берем больше статей для фильтрации
+            all_articles = articles_query.limit(100).all()
             print(f"📰 Получено {len(all_articles)} статей для фильтрации")
             articles = filter_articles_by_topic(all_articles, topic)
             print(f"✅ После фильтрации осталось {len(articles)} статей по теме '{topic}'")
@@ -247,7 +274,6 @@ def news_summary():
             articles = articles_query.limit(15).all()
             print(f"📰 Получено {len(articles)} статей без фильтрации")
 
-        # Проверяем, есть ли статьи после фильтрации
         if not articles:
             print(f"⚠️ Новости по теме '{topic}' не найдены")
             return jsonify({
@@ -261,10 +287,8 @@ def news_summary():
                 }
             })
 
-        # Импортируем функцию генерации выжимки
         from summary_generator import generate_news_summary, get_summary_statistics
 
-        # Генерируем выжимку
         print(f"🤖 Генерируем выжимку из {len(articles)} статей...")
         summary_data = generate_news_summary(articles, max_articles=5, topic=topic)
         stats = get_summary_statistics(articles)
@@ -296,7 +320,5 @@ def news_summary():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        # Запускаем фоновые задачи
         start_background_tasks()
-    # Для Docker нужно слушать все интерфейсы (0.0.0.0)
     app.run(host='0.0.0.0', port=5000, debug=True)

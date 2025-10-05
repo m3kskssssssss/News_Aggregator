@@ -50,6 +50,11 @@
                     <li><a href="{{ url_for('favorites') }}" class="nav-link {% if request.endpoint == 'favorites' %}active{% endif %}">
                         <i class="fas fa-bookmark"></i> Избранное
                     </a></li>
+                    <!-- ВОТ ЭТУ СТРОКУ ДОБАВИТЬ ↓ -->
+                    <li><a href="{{ url_for('game') }}" class="nav-link game-link {% if request.endpoint == 'game' %}active{% endif %}">
+                        <i class="fas fa-gamepad"></i> Случайная новость
+                    </a></li>
+                    <!-- ↑ КОНЕЦ ДОБАВЛЕНИЯ -->
                 </ul>
             </nav>
 
