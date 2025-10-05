@@ -1,4 +1,4 @@
-// static/js/game.js - ПОЛНАЯ ИГРОВАЯ ЛОГИКА
+// static/js/game.js - УПРОЩЕННАЯ ВЕРСИЯ
 
 class NewsFlappyGame {
     constructor() {
@@ -16,27 +16,28 @@ class NewsFlappyGame {
             width: 40,
             height: 40,
             velocity: 0,
-            gravity: 0.5,
-            jumpForce: -10
+            gravity: 0.35,  // Уменьшили с 0.5 - легче управлять
+            jumpForce: -8   // Уменьшили с -10 - более плавный прыжок
         };
 
         this.pipes = [];
-        this.pipeGap = 180;
+        this.pipeGap = 220;  // Увеличили с 180 - легче пролетать
         this.pipeWidth = 60;
         this.pipeSpeed = 3;
         this.frameCount = 0;
 
         this.articles = [];
-        this.articleHeight = 100; // Увеличили высоту для лучшей читаемости
-        this.articleSpeed = 3; // Синхронизируем скорость с трубами
+        this.articleHeight = 100;
+        this.articleSpeed = 3;
 
         this.score = 0;
         this.bestScore = parseInt(localStorage.getItem('newsGameBestScore') || '0');
         this.articlesRead = parseInt(localStorage.getItem('newsGameArticlesRead') || '0');
-        this.hitCount = 0; // Счетчик столкновений в текущей игре
+        this.hitCount = 0;
 
-        this.gameState = 'start'; // start, playing, paused, gameover
+        this.gameState = 'start';
         this.landedArticle = null;
+        this.firstJump = false; // Флаг первого прыжка
 
         // Эффекты столкновений
         this.hitCooldown = 0;
@@ -52,13 +53,41 @@ class NewsFlappyGame {
 
     init() {
         console.log('Инициализация игры...');
-        console.log('Размер канваса:', this.canvas.width, 'x', this.canvas.height);
 
         // Загружаем случайные статьи
         this.loadRandomArticles();
 
-        // Обработчики событий
-        this.canvas.addEventListener('click', () => this.handleInput());
+        // =============== ОБРАБОТЧИКИ ДЛЯ CANVAS ===============
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.handleInput();
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        this.canvas.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.handleInput();
+        });
+
+        // =============== ОБРАБОТЧИКИ ДЛЯ ЭКРАНОВ ===============
+
+        this.startScreen.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleInput();
+        }, { passive: false });
+
+        this.startScreen.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.handleInput();
+        });
+
+        // =============== КЛАВИАТУРА ===============
+
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -66,10 +95,35 @@ class NewsFlappyGame {
             }
         });
 
-        // Кнопки
-        document.getElementById('playAgainBtn').addEventListener('click', () => this.restart());
-        document.getElementById('restartBtn').addEventListener('click', () => this.restart());
-        document.getElementById('readArticleBtn').addEventListener('click', () => this.readArticle());
+        // =============== КНОПКИ ===============
+
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const readArticleBtn = document.getElementById('readArticleBtn');
+
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.restart();
+            }, { passive: false });
+            playAgainBtn.addEventListener('click', () => this.restart());
+        }
+
+        if (restartBtn) {
+            restartBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.restart();
+            }, { passive: false });
+            restartBtn.addEventListener('click', () => this.restart());
+        }
+
+        if (readArticleBtn) {
+            readArticleBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.readArticle();
+            }, { passive: false });
+            readArticleBtn.addEventListener('click', () => this.readArticle());
+        }
 
         // Обновляем UI
         this.updateUI();
@@ -77,7 +131,7 @@ class NewsFlappyGame {
         // Запускаем игровой цикл
         this.gameLoop();
 
-        console.log('Игра инициализирована!');
+        console.log('✅ Игра инициализирована!');
     }
 
     async loadRandomArticles() {
@@ -91,7 +145,7 @@ class NewsFlappyGame {
             }
 
             const articleWidth = 230;
-            const spacing = 20; // расстояние между статьями
+            const spacing = 20;
 
             this.articles = data.articles.map((article, index) => ({
                 ...article,
@@ -100,16 +154,13 @@ class NewsFlappyGame {
             }));
 
             console.log('✅ Загружено статей:', this.articles.length);
-            console.log('Первая статья:', this.articles[0]);
 
         } catch (error) {
             console.error('❌ Ошибка загрузки статей:', error);
-            console.log('Создаем тестовые статьи...');
 
             const articleWidth = 230;
             const spacing = 20;
 
-            // Создаем тестовые статьи
             this.articles = [
                 {id: 1, title: 'В Тбилиси в день выборов прошли массовые митинги', url: '#', source: 'Test News'},
                 {id: 2, title: 'Новости технологий: запуск нового смартфона', url: '#', source: 'Tech Daily'},
@@ -123,7 +174,7 @@ class NewsFlappyGame {
                 y: this.canvas.height - this.articleHeight
             }));
 
-            console.log('✅ Созданы тестовые статьи:', this.articles.length);
+            console.log('✅ Созданы тестовые статьи');
         }
     }
 
@@ -136,18 +187,21 @@ class NewsFlappyGame {
     }
 
     startGame() {
+        console.log('🚀 Игра запущена!');
         this.gameState = 'playing';
         this.startScreen.style.display = 'none';
         this.bird.x = 100;
-        this.jump();
+        this.firstJump = false; // Еще не было первого прыжка
+        this.bird.velocity = 0; // Обнуляем скорость
     }
 
     jump() {
+        this.firstJump = true; // Теперь был первый прыжок
         this.bird.velocity = this.bird.jumpForce;
     }
 
     restart() {
-        console.log('Перезапуск игры...');
+        console.log('🔄 Перезапуск игры...');
         this.bird.y = this.canvas.height / 2;
         this.bird.x = 100;
         this.bird.velocity = 0;
@@ -157,11 +211,12 @@ class NewsFlappyGame {
         this.frameCount = 0;
         this.hitCooldown = 0;
         this.isHit = false;
+        this.firstJump = false;
         this.gameState = 'playing';
         this.pauseScreen.style.display = 'none';
         this.gameOverScreen.style.display = 'none';
         this.landedArticle = null;
-        this.loadRandomArticles(); // Перезагружаем статьи
+        this.loadRandomArticles();
         this.updateUI();
     }
 
@@ -174,16 +229,51 @@ class NewsFlappyGame {
         }
     }
 
+    // Метод для нахождения статьи под птицей
+    getArticleUnderBird() {
+        const birdCenterX = this.bird.x + this.bird.width / 2;
+        const articleWidth = 230;
+
+        for (let article of this.articles) {
+            if (birdCenterX >= article.x && birdCenterX <= article.x + articleWidth) {
+                return article;
+            }
+        }
+
+        // Если не нашли точную, берем ближайшую
+        if (this.articles.length > 0) {
+            let closestArticle = this.articles[0];
+            let minDistance = Math.abs(birdCenterX - (this.articles[0].x + articleWidth / 2));
+
+            for (let article of this.articles) {
+                const distance = Math.abs(birdCenterX - (article.x + articleWidth / 2));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestArticle = article;
+                }
+            }
+
+            return closestArticle;
+        }
+
+        return null;
+    }
+
     update() {
         if (this.gameState !== 'playing') return;
 
-        // Обновление птицы
-        this.bird.velocity += this.bird.gravity;
-        this.bird.y += this.bird.velocity;
+        // Обновление птицы - применяем гравитацию только после первого прыжка
+        if (this.firstJump) {
+            this.bird.velocity += this.bird.gravity;
+            this.bird.y += this.bird.velocity;
+        } else {
+            // До первого прыжка птица летит прямо
+            this.bird.velocity = 0;
+        }
 
-        // Генерация труб
+        // Генерация труб - РЕЖЕ (увеличили с 90 до 150 фреймов)
         this.frameCount++;
-        if (this.frameCount % 90 === 0) {
+        if (this.frameCount % 150 === 0 && this.firstJump) { // Трубы появляются только после первого прыжка
             const minHeight = 50;
             const maxHeight = this.canvas.height - this.pipeGap - this.articleHeight - 50;
             const height = Math.random() * (maxHeight - minHeight) + minHeight;
@@ -200,20 +290,18 @@ class NewsFlappyGame {
         for (let i = this.pipes.length - 1; i >= 0; i--) {
             this.pipes[i].x -= this.pipeSpeed;
 
-            // Подсчет очков
             if (!this.pipes[i].scored && this.pipes[i].x + this.pipeWidth < this.bird.x) {
                 this.pipes[i].scored = true;
                 this.score++;
                 this.updateUI();
             }
 
-            // Удаление труб за пределами экрана
             if (this.pipes[i].x + this.pipeWidth < 0) {
                 this.pipes.splice(i, 1);
             }
         }
 
-        // Обновление статей (прокрутка)
+        // Обновление статей
         const articleWidth = 230;
         const spacing = 20;
         const totalWidth = articleWidth + spacing;
@@ -221,9 +309,7 @@ class NewsFlappyGame {
         this.articles.forEach(article => {
             article.x -= this.articleSpeed;
 
-            // Когда статья уходит за левый край, перемещаем её в конец
             if (article.x + articleWidth < 0) {
-                // Находим самую правую статью
                 const maxX = Math.max(...this.articles.map(a => a.x));
                 article.x = maxX + totalWidth;
             }
@@ -234,7 +320,6 @@ class NewsFlappyGame {
     }
 
     checkCollisions() {
-        // Уменьшаем cooldown после удара для визуального эффекта
         if (this.hitCooldown > 0) {
             this.hitCooldown--;
             if (this.hitCooldown === 0) {
@@ -242,41 +327,35 @@ class NewsFlappyGame {
             }
         }
 
-        // Проверка столкновения с трубами
         let isCollidingWithPipe = false;
 
         for (let pipe of this.pipes) {
-            // Проверяем, пересекается ли птица с трубой по X
             if (this.bird.x + this.bird.width > pipe.x &&
                 this.bird.x < pipe.x + this.pipeWidth) {
 
-                // Верхняя труба
                 if (this.bird.y < pipe.topHeight) {
                     isCollidingWithPipe = true;
-                    this.bird.y = pipe.topHeight; // Не даем пройти сквозь
-                    this.bird.velocity = Math.max(this.bird.velocity, 0); // Останавливаем движение вверх
+                    this.bird.y = pipe.topHeight;
+                    this.bird.velocity = Math.max(this.bird.velocity, 0);
                     this.hitPipe();
                 }
-                // Нижняя труба
                 else if (this.bird.y + this.bird.height > pipe.bottomY) {
                     isCollidingWithPipe = true;
-                    this.bird.y = pipe.bottomY - this.bird.height; // Не даем пройти сквозь
-                    this.bird.velocity = Math.min(this.bird.velocity, 0); // Останавливаем движение вниз
+                    this.bird.y = pipe.bottomY - this.bird.height;
+                    this.bird.velocity = Math.min(this.bird.velocity, 0);
                     this.hitPipe();
                 }
             }
         }
 
-        // Если птица застряла слишком далеко слева от своей начальной позиции
-        // (трубы подпирают её), это означает что она застряла - GAME OVER
         if (isCollidingWithPipe) {
-            // Находим трубу, которая сейчас давит на птицу
             for (let pipe of this.pipes) {
                 if (pipe.x <= this.bird.x + this.bird.width &&
                     pipe.x + this.pipeWidth > this.bird.x) {
-                    // Если труба прошла птицу и птица осталась позади - она застряла
                     if (pipe.x > this.bird.x + this.bird.width / 2) {
-                        console.log('💀 Застряла у левого края!');
+                        console.log('💀 Застряла между блоками!');
+                        // Берем статью под птицей в момент врезания
+                        this.landedArticle = this.getArticleUnderBird();
                         this.gameOver();
                         return;
                     }
@@ -284,58 +363,34 @@ class NewsFlappyGame {
             }
         }
 
-        // Столкновение с верхней границей - GAME OVER
         if (this.bird.y < -10) {
             console.log('💀 Улетела за верхнюю границу!');
+            // Берем статью под птицей в момент врезания
+            this.landedArticle = this.getArticleUnderBird();
             this.gameOver();
             return;
         }
 
-        // Приземление на статью
         if (this.bird.y + this.bird.height >= this.canvas.height - this.articleHeight) {
             this.landOnArticle();
         }
     }
 
     hitPipe() {
-        // Визуальный эффект удара (без отталкивания)
         if (!this.isHit) {
             this.isHit = true;
-            this.hitCooldown = 15; // Короткая визуальная вспышка
+            this.hitCooldown = 15;
             this.hitCount++;
             console.log('💥 Столкновение с блоком! (всего: ' + this.hitCount + ')');
         }
     }
 
     landOnArticle() {
-        // Находим статью, на которую приземлилась птица
-        const birdCenterX = this.bird.x + this.bird.width / 2;
-        const articleWidth = 230;
+        // Находим статью под птицей
+        this.landedArticle = this.getArticleUnderBird();
 
-        for (let article of this.articles) {
-            if (birdCenterX >= article.x && birdCenterX <= article.x + articleWidth) {
-                this.landedArticle = article;
-                console.log('✅ Приземлились на статью:', article.title);
-                break;
-            }
-        }
-
-        // Если не нашли точную статью, берем ближайшую
-        if (!this.landedArticle && this.articles.length > 0) {
-            // Находим ближайшую статью по X координате
-            let closestArticle = this.articles[0];
-            let minDistance = Math.abs(birdCenterX - (this.articles[0].x + articleWidth / 2));
-
-            for (let article of this.articles) {
-                const distance = Math.abs(birdCenterX - (article.x + articleWidth / 2));
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestArticle = article;
-                }
-            }
-
-            this.landedArticle = closestArticle;
-            console.log('📍 Выбрана ближайшая статья:', this.landedArticle.title);
+        if (this.landedArticle) {
+            console.log('✅ Приземлились на статью:', this.landedArticle.title);
         }
 
         this.pause();
@@ -347,7 +402,6 @@ class NewsFlappyGame {
         if (this.landedArticle) {
             const articleInfo = document.getElementById('landedArticle');
 
-            // Добавляем информацию о столкновениях
             let statsText = '';
             if (this.hitCount > 0) {
                 statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
@@ -368,7 +422,6 @@ class NewsFlappyGame {
 
         this.pauseScreen.style.display = 'flex';
 
-        // Обновляем лучший результат
         if (this.score > this.bestScore) {
             this.bestScore = this.score;
             localStorage.setItem('newsGameBestScore', this.bestScore.toString());
@@ -380,17 +433,31 @@ class NewsFlappyGame {
         this.gameState = 'gameover';
         document.getElementById('finalScore').textContent = this.score;
 
-        // Показываем статистику столкновений
         const deathMessage = document.querySelector('.death-message');
+
+        // Показываем статью, которая была под птицей
+        if (this.landedArticle) {
+            const articleInfo = document.getElementById('landedArticle');
+            if (articleInfo) {
+                articleInfo.innerHTML = `
+                    <div class="article-card">
+                        <h3>${this.landedArticle.title}</h3>
+                        <p class="article-source">
+                            <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
         if (this.hitCount > 0) {
-            deathMessage.textContent = `Ты улетел за границу! (${this.hitCount} столкновений)`;
+            deathMessage.textContent = `Game Over! (${this.hitCount} столкновений)`;
         } else {
-            deathMessage.textContent = 'Ты улетел за границу! (Без столкновений!)';
+            deathMessage.textContent = 'Game Over!';
         }
 
         this.gameOverScreen.style.display = 'flex';
 
-        // Обновляем лучший результат
         if (this.score > this.bestScore) {
             this.bestScore = this.score;
             localStorage.setItem('newsGameBestScore', this.bestScore.toString());
@@ -403,7 +470,7 @@ class NewsFlappyGame {
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Рисуем сетку (8-bit стиль)
+        // Рисуем сетку
         this.drawGrid();
 
         // Рисуем птицу
@@ -412,7 +479,7 @@ class NewsFlappyGame {
         // Рисуем трубы
         this.drawPipes();
 
-        // Рисуем статьи внизу
+        // Рисуем статьи
         this.drawArticles();
 
         // Рисуем счет
@@ -425,7 +492,6 @@ class NewsFlappyGame {
         this.ctx.strokeStyle = '#f0f0f0';
         this.ctx.lineWidth = 1;
 
-        // Вертикальные линии
         for (let x = 0; x < this.canvas.width; x += 40) {
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
@@ -433,7 +499,6 @@ class NewsFlappyGame {
             this.ctx.stroke();
         }
 
-        // Горизонтальные линии
         for (let y = 0; y < this.canvas.height; y += 40) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
@@ -443,22 +508,17 @@ class NewsFlappyGame {
     }
 
     drawBird() {
-        // Цвет птицы меняется при столкновении
         const birdColor = this.isHit ? '#ff0000' : '#000000';
 
-        // Пиксельная птица (черный или красный квадрат с "крылом")
         this.ctx.fillStyle = birdColor;
         this.ctx.fillRect(this.bird.x, this.bird.y, this.bird.width, this.bird.height);
 
-        // "Глаз"
         this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(this.bird.x + 25, this.bird.y + 10, 8, 8);
 
-        // "Клюв"
         this.ctx.fillStyle = birdColor;
         this.ctx.fillRect(this.bird.x + 40, this.bird.y + 15, 8, 8);
 
-        // "Крыло" (анимация)
         if (Math.floor(this.frameCount / 10) % 2 === 0) {
             this.ctx.fillRect(this.bird.x - 8, this.bird.y + 20, 15, 8);
         }
@@ -468,14 +528,11 @@ class NewsFlappyGame {
         this.ctx.fillStyle = '#000000';
 
         for (let pipe of this.pipes) {
-            // Верхняя труба
             this.ctx.fillRect(pipe.x, 0, this.pipeWidth, pipe.topHeight);
 
-            // Нижняя труба
             const bottomHeight = this.canvas.height - this.articleHeight - pipe.bottomY;
             this.ctx.fillRect(pipe.x, pipe.bottomY, this.pipeWidth, bottomHeight);
 
-            // Рамки (8-bit стиль)
             this.ctx.strokeStyle = '#ffffff';
             this.ctx.lineWidth = 2;
             this.ctx.strokeRect(pipe.x, 0, this.pipeWidth, pipe.topHeight);
@@ -486,11 +543,9 @@ class NewsFlappyGame {
     drawArticles() {
         const bottomY = this.canvas.height - this.articleHeight;
 
-        // Рисуем черную полосу внизу
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, bottomY, this.canvas.width, this.articleHeight);
 
-        // Белая линия разделения сверху
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 3;
         this.ctx.beginPath();
@@ -498,7 +553,6 @@ class NewsFlappyGame {
         this.ctx.lineTo(this.canvas.width, bottomY);
         this.ctx.stroke();
 
-        // Если статьи ещё не загружены, показываем "Загрузка..."
         if (!this.articles || this.articles.length === 0) {
             this.ctx.fillStyle = '#ffffff';
             this.ctx.font = 'bold 16px monospace';
@@ -508,7 +562,6 @@ class NewsFlappyGame {
             return;
         }
 
-        // Рисуем каждую статью
         const articleWidth = 230;
         const spacing = 10;
 
@@ -516,21 +569,17 @@ class NewsFlappyGame {
             const x = article.x;
             const y = bottomY;
 
-            // Проверяем, видна ли статья на экране
             if (x + articleWidth < 0 || x > this.canvas.width) {
                 continue;
             }
 
-            // Рисуем фон статьи (темно-серый)
             this.ctx.fillStyle = '#2a2a2a';
             this.ctx.fillRect(x + spacing, y + spacing, articleWidth - spacing * 2, this.articleHeight - spacing * 2);
 
-            // Рисуем рамку статьи (белая)
             this.ctx.strokeStyle = '#ffffff';
             this.ctx.lineWidth = 2;
             this.ctx.strokeRect(x + spacing, y + spacing, articleWidth - spacing * 2, this.articleHeight - spacing * 2);
 
-            // Рисуем текст заголовка
             this.ctx.fillStyle = '#ffffff';
             this.ctx.font = 'bold 12px Arial, sans-serif';
             this.ctx.textAlign = 'left';
@@ -539,7 +588,6 @@ class NewsFlappyGame {
             const textStartY = y + spacing + 20;
             const maxTextWidth = articleWidth - spacing * 2 - 16;
 
-            // Разбиваем заголовок на слова
             const words = article.title.split(' ');
             let line = '';
             let lineY = textStartY;
@@ -552,14 +600,12 @@ class NewsFlappyGame {
                 const metrics = this.ctx.measureText(testLine);
 
                 if (metrics.width > maxTextWidth && line !== '') {
-                    // Рисуем строку
                     this.ctx.fillText(line.trim(), textX, lineY);
                     line = words[i] + ' ';
                     lineY += lineHeight;
                     lineCount++;
 
                     if (lineCount >= maxLines - 1) {
-                        // Последняя строка - добавляем "..."
                         const remainingWords = words.slice(i + 1).join(' ');
                         if (remainingWords) {
                             line = line.trim() + '...';
@@ -571,42 +617,35 @@ class NewsFlappyGame {
                 }
             }
 
-            // Рисуем последнюю строку
             if (line.trim()) {
                 this.ctx.fillText(line.trim(), textX, lineY);
             }
 
-            // Рисуем источник внизу
             this.ctx.fillStyle = '#888888';
             this.ctx.font = '10px monospace';
             const sourceY = y + this.articleHeight - spacing - 8;
             this.ctx.fillText('📰 ' + article.source, textX, sourceY);
         }
 
-        // Восстанавливаем textAlign
         this.ctx.textAlign = 'left';
     }
 
     drawScore() {
-        // Основной счет (по центру сверху)
         this.ctx.fillStyle = '#000000';
         this.ctx.font = 'bold 36px monospace';
         this.ctx.textAlign = 'center';
 
-        // Тень для читаемости
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 4;
         this.ctx.strokeText(this.score.toString(), this.canvas.width / 2, 50);
         this.ctx.fillText(this.score.toString(), this.canvas.width / 2, 50);
 
-        // Счетчик столкновений (верхний правый угол)
         if (this.hitCount > 0) {
             this.ctx.font = 'bold 18px monospace';
             this.ctx.textAlign = 'right';
             this.ctx.fillStyle = '#ff0000';
             const hitText = '💥 ' + this.hitCount;
 
-            // Тень
             this.ctx.strokeStyle = '#ffffff';
             this.ctx.lineWidth = 3;
             this.ctx.strokeText(hitText, this.canvas.width - 20, 30);
