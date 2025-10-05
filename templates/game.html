@@ -42,7 +42,10 @@
             <div class="screen-content">
                 <h2>ПАУЗА</h2>
                 <p>Ты приземлился на новость!</p>
+
+                <!-- Статья на которую приземлился -->
                 <div id="landedArticle" class="landed-article"></div>
+
                 <div class="pause-actions">
                     <button id="readArticleBtn" class="game-btn primary">
                         <i class="fas fa-external-link-alt"></i> Читать статью
@@ -67,16 +70,14 @@
                     <span id="finalScore" class="score-value">0</span>
                 </div>
 
-                <!-- Статья под птицей в момент врезания -->
-                <div style="margin: 1.5rem 0;">
-                    <p style="font-size: 1rem; margin-bottom: 0.75rem; opacity: 0.9;">
-                        Статья под тобой в момент врезания:
-                    </p>
-                    <div id="landedArticle" class="landed-article"></div>
-                </div>
+                <!-- Статья на которую упал -->
+                <div id="landedArticle" class="landed-article"></div>
 
                 <div class="pause-actions">
-                    <button id="restartBtn" class="game-btn primary">
+                    <button id="readArticleBtn" class="game-btn primary">
+                        <i class="fas fa-external-link-alt"></i> Читать статью
+                    </button>
+                    <button id="restartBtn" class="game-btn secondary">
                         <i class="fas fa-redo"></i> Попробовать снова
                     </button>
                     <a href="{{ url_for('index') }}" class="game-btn tertiary">

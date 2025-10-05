@@ -99,7 +99,9 @@ class NewsFlappyGame {
 
         const playAgainBtn = document.getElementById('playAgainBtn');
         const restartBtn = document.getElementById('restartBtn');
-        const readArticleBtn = document.getElementById('readArticleBtn');
+
+        // Кнопка "Читать статью" есть в обоих экранах (pause и gameOver)
+        const readArticleBtns = document.querySelectorAll('#readArticleBtn');
 
         if (playAgainBtn) {
             playAgainBtn.addEventListener('touchstart', (e) => {
@@ -117,13 +119,14 @@ class NewsFlappyGame {
             restartBtn.addEventListener('click', () => this.restart());
         }
 
-        if (readArticleBtn) {
-            readArticleBtn.addEventListener('touchstart', (e) => {
+        // Добавляем обработчики для всех кнопок "Читать статью"
+        readArticleBtns.forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 this.readArticle();
             }, { passive: false });
-            readArticleBtn.addEventListener('click', () => this.readArticle());
-        }
+            btn.addEventListener('click', () => this.readArticle());
+        });
 
         // Обновляем UI
         this.updateUI();
@@ -400,7 +403,7 @@ class NewsFlappyGame {
         this.gameState = 'paused';
 
         if (this.landedArticle) {
-            const articleInfo = document.getElementById('landedArticle');
+            const articleInfo = document.querySelector('#pauseScreen #landedArticle');
 
             let statsText = '';
             if (this.hitCount > 0) {
@@ -435,11 +438,19 @@ class NewsFlappyGame {
 
         const deathMessage = document.querySelector('.death-message');
 
-        // Показываем статью, которая была под птицей
+        // Показываем статью на которую упал
         if (this.landedArticle) {
-            const articleInfo = document.getElementById('landedArticle');
+            const articleInfo = document.querySelector('#gameOverScreen #landedArticle');
             if (articleInfo) {
+                let statsText = '';
+                if (this.hitCount > 0) {
+                    statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
+                } else {
+                    statsText = `<p style="color: #51cf66; font-size: 0.9rem; margin-bottom: 1rem;">✨ Без столкновений!</p>`;
+                }
+
                 articleInfo.innerHTML = `
+                    ${statsText}
                     <div class="article-card">
                         <h3>${this.landedArticle.title}</h3>
                         <p class="article-source">
