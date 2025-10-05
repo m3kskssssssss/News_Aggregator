@@ -1,10 +1,12 @@
+<!-- Вставьте это в templates/game.html вместо существующего содержимого -->
+
 {% extends "base.html" %}
 
 {% block title %}Игра: Случайная новость - Новостной Агрегатор{% endblock %}
 
 {% block content %}
 <div class="game-container">
-        <!-- Игровое поле -->
+    <!-- Игровое поле -->
     <div class="game-wrapper">
         <canvas id="gameCanvas"></canvas>
 
@@ -64,6 +66,15 @@
                     <span class="score-label">Счет:</span>
                     <span id="finalScore" class="score-value">0</span>
                 </div>
+
+                <!-- Статья под птицей в момент врезания -->
+                <div style="margin: 1.5rem 0;">
+                    <p style="font-size: 1rem; margin-bottom: 0.75rem; opacity: 0.9;">
+                        Статья под тобой в момент врезания:
+                    </p>
+                    <div id="landedArticle" class="landed-article"></div>
+                </div>
+
                 <div class="pause-actions">
                     <button id="restartBtn" class="game-btn primary">
                         <i class="fas fa-redo"></i> Попробовать снова

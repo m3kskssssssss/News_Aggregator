@@ -1,4 +1,4 @@
-// static/js/game.js - ИСПРАВЛЕННАЯ ВЕРСИЯ С ПОДДЕРЖКОЙ TOUCH
+// static/js/game.js - УПРОЩЕННАЯ ВЕРСИЯ
 
 class NewsFlappyGame {
     constructor() {
@@ -16,12 +16,12 @@ class NewsFlappyGame {
             width: 40,
             height: 40,
             velocity: 0,
-            gravity: 0.5,
-            jumpForce: -10
+            gravity: 0.35,  // Уменьшили с 0.5 - легче управлять
+            jumpForce: -8   // Уменьшили с -10 - более плавный прыжок
         };
 
         this.pipes = [];
-        this.pipeGap = 180;
+        this.pipeGap = 220;  // Увеличили с 180 - легче пролетать
         this.pipeWidth = 60;
         this.pipeSpeed = 3;
         this.frameCount = 0;
@@ -35,8 +35,9 @@ class NewsFlappyGame {
         this.articlesRead = parseInt(localStorage.getItem('newsGameArticlesRead') || '0');
         this.hitCount = 0;
 
-        this.gameState = 'start'; // start, playing, paused, gameover
+        this.gameState = 'start';
         this.landedArticle = null;
+        this.firstJump = false; // Флаг первого прыжка
 
         // Эффекты столкновений
         this.hitCooldown = 0;
@@ -52,28 +53,41 @@ class NewsFlappyGame {
 
     init() {
         console.log('Инициализация игры...');
-        console.log('Размер канваса:', this.canvas.width, 'x', this.canvas.height);
 
         // Загружаем случайные статьи
         this.loadRandomArticles();
 
-        // Обработчики событий для МОБИЛЬНЫХ УСТРОЙСТВ (touchstart/touchend)
+        // =============== ОБРАБОТЧИКИ ДЛЯ CANVAS ===============
+
         this.canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // КРИТИЧЕСКИ ВАЖНО!
+            e.preventDefault();
             this.handleInput();
-        }, { passive: false }); // passive: false позволяет preventDefault работать
+        }, { passive: false });
 
         this.canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
         }, { passive: false });
 
-        // Обработчик для ДЕСКТОПА (клик мышкой)
         this.canvas.addEventListener('mousedown', (e) => {
             e.preventDefault();
             this.handleInput();
         });
 
-        // Обработчик для КЛАВИАТУРЫ (пробел)
+        // =============== ОБРАБОТЧИКИ ДЛЯ ЭКРАНОВ ===============
+
+        this.startScreen.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleInput();
+        }, { passive: false });
+
+        this.startScreen.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.handleInput();
+        });
+
+        // =============== КЛАВИАТУРА ===============
+
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -81,10 +95,35 @@ class NewsFlappyGame {
             }
         });
 
-        // Кнопки
-        document.getElementById('playAgainBtn').addEventListener('click', () => this.restart());
-        document.getElementById('restartBtn').addEventListener('click', () => this.restart());
-        document.getElementById('readArticleBtn').addEventListener('click', () => this.readArticle());
+        // =============== КНОПКИ ===============
+
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const readArticleBtn = document.getElementById('readArticleBtn');
+
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.restart();
+            }, { passive: false });
+            playAgainBtn.addEventListener('click', () => this.restart());
+        }
+
+        if (restartBtn) {
+            restartBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.restart();
+            }, { passive: false });
+            restartBtn.addEventListener('click', () => this.restart());
+        }
+
+        if (readArticleBtn) {
+            readArticleBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.readArticle();
+            }, { passive: false });
+            readArticleBtn.addEventListener('click', () => this.readArticle());
+        }
 
         // Обновляем UI
         this.updateUI();
@@ -92,7 +131,7 @@ class NewsFlappyGame {
         // Запускаем игровой цикл
         this.gameLoop();
 
-        console.log('✅ Игра инициализирована! Touch события добавлены.');
+        console.log('✅ Игра инициализирована!');
     }
 
     async loadRandomArticles() {
@@ -118,7 +157,6 @@ class NewsFlappyGame {
 
         } catch (error) {
             console.error('❌ Ошибка загрузки статей:', error);
-            console.log('Создаем тестовые статьи...');
 
             const articleWidth = 230;
             const spacing = 20;
@@ -136,13 +174,11 @@ class NewsFlappyGame {
                 y: this.canvas.height - this.articleHeight
             }));
 
-            console.log('✅ Созданы тестовые статьи:', this.articles.length);
+            console.log('✅ Созданы тестовые статьи');
         }
     }
 
     handleInput() {
-        console.log('🎮 Ввод получен! Состояние игры:', this.gameState);
-
         if (this.gameState === 'start') {
             this.startGame();
         } else if (this.gameState === 'playing') {
@@ -155,11 +191,12 @@ class NewsFlappyGame {
         this.gameState = 'playing';
         this.startScreen.style.display = 'none';
         this.bird.x = 100;
-        this.jump();
+        this.firstJump = false; // Еще не было первого прыжка
+        this.bird.velocity = 0; // Обнуляем скорость
     }
 
     jump() {
-        console.log('⬆️ Прыжок!');
+        this.firstJump = true; // Теперь был первый прыжок
         this.bird.velocity = this.bird.jumpForce;
     }
 
@@ -174,6 +211,7 @@ class NewsFlappyGame {
         this.frameCount = 0;
         this.hitCooldown = 0;
         this.isHit = false;
+        this.firstJump = false;
         this.gameState = 'playing';
         this.pauseScreen.style.display = 'none';
         this.gameOverScreen.style.display = 'none';
@@ -191,16 +229,51 @@ class NewsFlappyGame {
         }
     }
 
+    // Метод для нахождения статьи под птицей
+    getArticleUnderBird() {
+        const birdCenterX = this.bird.x + this.bird.width / 2;
+        const articleWidth = 230;
+
+        for (let article of this.articles) {
+            if (birdCenterX >= article.x && birdCenterX <= article.x + articleWidth) {
+                return article;
+            }
+        }
+
+        // Если не нашли точную, берем ближайшую
+        if (this.articles.length > 0) {
+            let closestArticle = this.articles[0];
+            let minDistance = Math.abs(birdCenterX - (this.articles[0].x + articleWidth / 2));
+
+            for (let article of this.articles) {
+                const distance = Math.abs(birdCenterX - (article.x + articleWidth / 2));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestArticle = article;
+                }
+            }
+
+            return closestArticle;
+        }
+
+        return null;
+    }
+
     update() {
         if (this.gameState !== 'playing') return;
 
-        // Обновление птицы
-        this.bird.velocity += this.bird.gravity;
-        this.bird.y += this.bird.velocity;
+        // Обновление птицы - применяем гравитацию только после первого прыжка
+        if (this.firstJump) {
+            this.bird.velocity += this.bird.gravity;
+            this.bird.y += this.bird.velocity;
+        } else {
+            // До первого прыжка птица летит прямо
+            this.bird.velocity = 0;
+        }
 
-        // Генерация труб
+        // Генерация труб - РЕЖЕ (увеличили с 90 до 150 фреймов)
         this.frameCount++;
-        if (this.frameCount % 90 === 0) {
+        if (this.frameCount % 150 === 0 && this.firstJump) { // Трубы появляются только после первого прыжка
             const minHeight = 50;
             const maxHeight = this.canvas.height - this.pipeGap - this.articleHeight - 50;
             const height = Math.random() * (maxHeight - minHeight) + minHeight;
@@ -280,7 +353,9 @@ class NewsFlappyGame {
                 if (pipe.x <= this.bird.x + this.bird.width &&
                     pipe.x + this.pipeWidth > this.bird.x) {
                     if (pipe.x > this.bird.x + this.bird.width / 2) {
-                        console.log('💀 Застряла у левого края!');
+                        console.log('💀 Застряла между блоками!');
+                        // Берем статью под птицей в момент врезания
+                        this.landedArticle = this.getArticleUnderBird();
                         this.gameOver();
                         return;
                     }
@@ -290,6 +365,8 @@ class NewsFlappyGame {
 
         if (this.bird.y < -10) {
             console.log('💀 Улетела за верхнюю границу!');
+            // Берем статью под птицей в момент врезания
+            this.landedArticle = this.getArticleUnderBird();
             this.gameOver();
             return;
         }
@@ -309,31 +386,11 @@ class NewsFlappyGame {
     }
 
     landOnArticle() {
-        const birdCenterX = this.bird.x + this.bird.width / 2;
-        const articleWidth = 230;
+        // Находим статью под птицей
+        this.landedArticle = this.getArticleUnderBird();
 
-        for (let article of this.articles) {
-            if (birdCenterX >= article.x && birdCenterX <= article.x + articleWidth) {
-                this.landedArticle = article;
-                console.log('✅ Приземлились на статью:', article.title);
-                break;
-            }
-        }
-
-        if (!this.landedArticle && this.articles.length > 0) {
-            let closestArticle = this.articles[0];
-            let minDistance = Math.abs(birdCenterX - (this.articles[0].x + articleWidth / 2));
-
-            for (let article of this.articles) {
-                const distance = Math.abs(birdCenterX - (article.x + articleWidth / 2));
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestArticle = article;
-                }
-            }
-
-            this.landedArticle = closestArticle;
-            console.log('📍 Выбрана ближайшая статья:', this.landedArticle.title);
+        if (this.landedArticle) {
+            console.log('✅ Приземлились на статью:', this.landedArticle.title);
         }
 
         this.pause();
@@ -377,10 +434,26 @@ class NewsFlappyGame {
         document.getElementById('finalScore').textContent = this.score;
 
         const deathMessage = document.querySelector('.death-message');
+
+        // Показываем статью, которая была под птицей
+        if (this.landedArticle) {
+            const articleInfo = document.getElementById('landedArticle');
+            if (articleInfo) {
+                articleInfo.innerHTML = `
+                    <div class="article-card">
+                        <h3>${this.landedArticle.title}</h3>
+                        <p class="article-source">
+                            <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
         if (this.hitCount > 0) {
-            deathMessage.textContent = `Ты улетел за границу! (${this.hitCount} столкновений)`;
+            deathMessage.textContent = `Game Over! (${this.hitCount} столкновений)`;
         } else {
-            deathMessage.textContent = 'Ты улетел за границу! (Без столкновений!)';
+            deathMessage.textContent = 'Game Over!';
         }
 
         this.gameOverScreen.style.display = 'flex';
