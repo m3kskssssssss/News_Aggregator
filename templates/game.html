@@ -1,5 +1,3 @@
-<!-- Вставьте это в templates/game.html вместо существующего содержимого -->
-
 {% extends "base.html" %}
 
 {% block title %}Игра: Случайная новость - Новостной Агрегатор{% endblock %}
@@ -43,11 +41,11 @@
                 <h2>Game over</h2>
                 <p>Ты приземлился на новость!</p>
 
-                <!-- Статья на которую приземлился -->
-                <div id="landedArticle" class="landed-article"></div>
+                <!-- УНИКАЛЬНЫЙ ID для паузы -->
+                <div id="landedArticlePause" class="landed-article"></div>
 
                 <div class="pause-actions">
-                    <button id="readArticleBtn" class="game-btn primary">
+                    <button id="readArticleBtnPause" class="game-btn primary">
                         <i class="fas fa-external-link-alt"></i> Читать статью
                     </button>
                     <button id="playAgainBtn" class="game-btn secondary">
@@ -66,11 +64,11 @@
                 <h2>Game over</h2>
                 <p class="death-message">Под тобой (в момент столкновения) новость!</p>
 
-                <!-- Статья на которую упал -->
-                <div id="landedArticle" class="landed-article"></div>
+                <!-- УНИКАЛЬНЫЙ ID для game over -->
+                <div id="landedArticleGameOver" class="landed-article"></div>
 
                 <div class="pause-actions">
-                    <button id="readArticleBtn" class="game-btn primary">
+                    <button id="readArticleBtnGameOver" class="game-btn primary">
                         <i class="fas fa-external-link-alt"></i> Читать статью
                     </button>
                     <button id="restartBtn" class="game-btn secondary">

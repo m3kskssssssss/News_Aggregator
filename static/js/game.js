@@ -92,10 +92,11 @@ class NewsFlappyGame {
             }
         });
 
-        // Кнопки
+        // Кнопки - ИСПОЛЬЗУЕМ УНИКАЛЬНЫЕ ID
         const playAgainBtn = document.getElementById('playAgainBtn');
         const restartBtn = document.getElementById('restartBtn');
-        const readArticleBtns = document.querySelectorAll('#readArticleBtn');
+        const readArticleBtnPause = document.getElementById('readArticleBtnPause'); // ✅ Уникальный ID
+        const readArticleBtnGameOver = document.getElementById('readArticleBtnGameOver'); // ✅ Уникальный ID
 
         if (playAgainBtn) {
             playAgainBtn.addEventListener('touchstart', (e) => {
@@ -113,13 +114,22 @@ class NewsFlappyGame {
             restartBtn.addEventListener('click', () => this.restart());
         }
 
-        readArticleBtns.forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
+        // ✅ Отдельные обработчики для каждой кнопки
+        if (readArticleBtnPause) {
+            readArticleBtnPause.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 this.readArticle();
             }, { passive: false });
-            btn.addEventListener('click', () => this.readArticle());
-        });
+            readArticleBtnPause.addEventListener('click', () => this.readArticle());
+        }
+
+        if (readArticleBtnGameOver) {
+            readArticleBtnGameOver.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.readArticle();
+            }, { passive: false });
+            readArticleBtnGameOver.addEventListener('click', () => this.readArticle());
+        }
 
         // Обновляем UI
         this.updateUI();
@@ -400,33 +410,32 @@ class NewsFlappyGame {
     }
 
     pause() {
+        console.log('⏸️ Пауза. Статья:', this.landedArticle ? this.landedArticle.title : 'не найдена');
         this.gameState = 'paused';
 
-        if (this.landedArticle) {
-            const articleInfo = document.querySelector('#pauseScreen #landedArticle');
+        // ИСПОЛЬЗУЕМ УНИКАЛЬНЫЙ ID: landedArticlePause ✅
+        const articleInfo = document.getElementById('landedArticlePause');
 
-            if (articleInfo) {
-                let statsText = '';
-                if (this.hitCount > 0) {
-                    statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
-                } else {
-                    statsText = `<p style="color: #51cf66; font-size: 0.9rem; margin-bottom: 1rem;">✨ Без столкновений!</p>`;
-                }
-
-                articleInfo.innerHTML = `
-                    ${statsText}
-                    <div class="article-card">
-                        <h3>${this.landedArticle.title}</h3>
-                        <p class="article-source">
-                            <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
-                        </p>
-                    </div>
-                `;
+        if (articleInfo && this.landedArticle) {
+            let statsText = '';
+            if (this.hitCount > 0) {
+                statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
             } else {
-                console.error('❌ Элемент #pauseScreen #landedArticle не найден!');
+                statsText = `<p style="color: #51cf66; font-size: 0.9rem; margin-bottom: 1rem;">✨ Без столкновений!</p>`;
             }
+
+            articleInfo.innerHTML = `
+                ${statsText}
+                <div class="article-card">
+                    <h3>${this.landedArticle.title}</h3>
+                    <p class="article-source">
+                        <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                    </p>
+                </div>
+            `;
+            console.log('✅ Статья отображена в pauseScreen');
         } else {
-            console.warn('⚠️ landedArticle не установлена в pause()');
+            console.error('❌ Элемент landedArticlePause не найден или нет статьи!');
         }
 
         this.pauseScreen.style.display = 'flex';
@@ -440,18 +449,19 @@ class NewsFlappyGame {
 
     gameOver() {
         console.log('💀 Game Over! Статья:', this.landedArticle ? this.landedArticle.title : 'не найдена');
-
+        
         this.gameState = 'gameover';
         document.getElementById('finalScore').textContent = this.score;
 
         const deathMessage = document.querySelector('.death-message');
 
-        // Показываем статью на которую упал
-        if (this.landedArticle) {
-            console.log('✅ Показываем статью:', this.landedArticle.title);
-            const articleInfo = document.querySelector('#gameOverScreen #landedArticle');
+        // ИСПОЛЬЗУЕМ УНИКАЛЬНЫЙ ID: landedArticleGameOver ✅
+        const articleInfo = document.getElementById('landedArticleGameOver');
 
-            if (articleInfo) {
+        if (articleInfo) {
+            if (this.landedArticle) {
+                console.log('✅ Отображаем статью:', this.landedArticle.title);
+
                 let statsText = '';
                 if (this.hitCount > 0) {
                     statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
@@ -468,20 +478,14 @@ class NewsFlappyGame {
                         </p>
                     </div>
                 `;
-                console.log('✅ Статья успешно отображена');
+                console.log('✅ Статья успешно отображена в gameOverScreen');
             } else {
-                console.error('❌ Элемент #gameOverScreen #landedArticle не найден!');
-            }
-        } else {
-            console.warn('⚠️ landedArticle не установлена - пытаемся найти статью');
-            // Если статья не была установлена, пробуем найти её сейчас
-            this.landedArticle = this.getArticleUnderBird();
+                console.warn('⚠️ landedArticle не установлена - пытаемся найти статью');
+                // Если статья не была установлена, пробуем найти её сейчас
+                this.landedArticle = this.getArticleUnderBird();
 
-            if (this.landedArticle) {
-                console.log('✅ Статья найдена:', this.landedArticle.title);
-                // Повторно вызываем gameOver с найденной статьей
-                const articleInfo = document.querySelector('#gameOverScreen #landedArticle');
-                if (articleInfo) {
+                if (this.landedArticle) {
+                    console.log('✅ Статья найдена:', this.landedArticle.title);
                     articleInfo.innerHTML = `
                         <div class="article-card">
                             <h3>${this.landedArticle.title}</h3>
@@ -490,10 +494,17 @@ class NewsFlappyGame {
                             </p>
                         </div>
                     `;
+                } else {
+                    console.error('❌ Не удалось найти статью под птицей!');
+                    articleInfo.innerHTML = `
+                        <div class="article-card">
+                            <p style="color: #999;">Статья не найдена</p>
+                        </div>
+                    `;
                 }
-            } else {
-                console.error('❌ Не удалось найти статью под птицей!');
             }
+        } else {
+            console.error('❌ Элемент landedArticleGameOver не найден!');
         }
 
         if (this.hitCount > 0) {
