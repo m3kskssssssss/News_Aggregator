@@ -435,6 +435,89 @@ class NewsFlappyGame {
         }
     }
 
+    gameOver() {
+        console.log('💀 Game Over! Статья:', this.landedArticle ? this.landedArticle.title : 'не найдена');
+
+        this.gameState = 'gameover';
+
+        // Безопасная установка финального счета
+        const finalScoreElement = document.getElementById('finalScore');
+        if (finalScoreElement) {
+            finalScoreElement.textContent = this.score;
+        } else {
+            console.error('❌ Элемент finalScore не найден!');
+        }
+
+        // Безопасная установка сообщения о смерти
+        const deathMessage = document.querySelector('.death-message');
+        if (deathMessage) {
+            if (this.hitCount > 0) {
+                deathMessage.textContent = `Game Over! (${this.hitCount} столкновений)`;
+            } else {
+                deathMessage.textContent = 'Game Over!';
+            }
+        } else {
+            console.error('❌ Элемент deathMessage не найден!');
+        }
+
+        // Отображение статьи (как в паузе при приземлении)
+        const articleInfo = document.getElementById('landedArticleGameOver');
+
+        if (articleInfo) {
+            if (this.landedArticle) {
+                console.log('✅ Отображаем статью:', this.landedArticle.title);
+
+                articleInfo.innerHTML = `
+                    <div class="article-card">
+                        <h3>${this.landedArticle.title}</h3>
+                        <p class="article-source">
+                            <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                        </p>
+                    </div>
+                `;
+                console.log('✅ Статья успешно отображена в gameOverScreen');
+            } else {
+                console.warn('⚠️ landedArticle не установлена - пытаемся найти статью');
+                this.landedArticle = this.getArticleUnderBird();
+
+                if (this.landedArticle) {
+                    console.log('✅ Статья найдена:', this.landedArticle.title);
+                    articleInfo.innerHTML = `
+                        <div class="article-card">
+                            <h3>${this.landedArticle.title}</h3>
+                            <p class="article-source">
+                                <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    console.error('❌ Не удалось найти статью под птицей!');
+                    articleInfo.innerHTML = `
+                        <div class="article-card">
+                            <p style="color: #999;">Статья не найдена</p>
+                        </div>
+                    `;
+                }
+            }
+        } else {
+            console.error('❌ Элемент landedArticleGameOver не найден!');
+        }
+
+        // Безопасное отображение экрана Game Over
+        if (this.gameOverScreen) {
+            this.gameOverScreen.style.display = 'flex';
+        } else {
+            console.error('❌ gameOverScreen не найден!');
+        }
+
+        // Обновление лучшего счета
+        if (this.score > this.bestScore) {
+            this.bestScore = this.score;
+            localStorage.setItem('newsGameBestScore', this.bestScore.toString());
+            this.updateUI();
+        }
+    }
+
     draw() {
         // Очистка канваса
         this.ctx.fillStyle = '#ffffff';
