@@ -2734,3 +2734,39 @@ body {
         font-size: 1.5rem;
     }
 }
+
+/* Добавьте эти правила в раздел игры в style.css */
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    background: #ffffff;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    /* КРИТИЧЕСКИ ВАЖНО для мобильных устройств */
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Предотвращаем выделение текста и всплывающие меню на мобильных */
+.game-wrapper {
+    position: relative;
+    background: #ffffff;
+    border: 4px solid #000000;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+    margin-bottom: 2rem;
+    /* Добавляем для мобильных */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    user-select: none;
+}
+
+/* Убираем подсветку при нажатии на всех игровых элементах */
+.game-screen,
+.game-btn {
+    -webkit-tap-highlight-color: transparent;
+}
