@@ -8,9 +8,21 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- Кнопка мобильного меню -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Открыть меню">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
+    <!-- Overlay для закрытия меню -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
     <div class="app-container">
         <!-- Боковая панель -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <h2><i class="fas fa-newspaper"></i> Новости</h2>
             </div>

@@ -1,4 +1,4 @@
-/* static/css/style.css - ПОЛНАЯ ВЕРСИЯ */
+/* static/css/style.css - ОБНОВЛЕННАЯ ВЕРСИЯ С МОБИЛЬНЫМ МЕНЮ */
 
 /* Основные переменные */
 :root {
@@ -43,7 +43,100 @@ body {
     min-height: 100vh;
 }
 
-/* Боковая панель */
+/* ==================== МОБИЛЬНОЕ МЕНЮ ==================== */
+
+/* Кнопка гамбургер-меню (видна только на мобильных) */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001;
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-btn:hover {
+    background: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+.mobile-menu-btn:active {
+    transform: scale(0.95);
+}
+
+/* Иконка гамбургера */
+.hamburger {
+    position: relative;
+    width: 24px;
+    height: 18px;
+    margin: 0 auto;
+}
+
+.hamburger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: white;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.hamburger span:nth-child(1) {
+    top: 0;
+}
+
+.hamburger span:nth-child(2) {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.hamburger span:nth-child(3) {
+    bottom: 0;
+}
+
+/* Анимация при открытии меню */
+.mobile-menu-btn.active .hamburger span:nth-child(1) {
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.mobile-menu-btn.active .hamburger span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-btn.active .hamburger span:nth-child(3) {
+    bottom: 50%;
+    transform: translateY(50%) rotate(-45deg);
+}
+
+/* Overlay для закрытия меню */
+.mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-overlay.active {
+    opacity: 1;
+}
+
+/* ==================== БОКОВАЯ ПАНЕЛЬ ==================== */
+
 .sidebar {
     width: var(--sidebar-width);
     background: var(--card-background);
@@ -54,6 +147,8 @@ body {
     position: fixed;
     height: 100vh;
     overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
 }
 
 .sidebar-header {
@@ -365,6 +460,8 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .publish-date {
@@ -421,6 +518,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .read-more-btn {
@@ -436,6 +535,7 @@ body {
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: var(--shadow-md);
+    white-space: nowrap;
 }
 
 .read-more-btn:hover {
@@ -464,6 +564,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .action-btn:hover {
@@ -533,6 +634,8 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .pagination-btn {
@@ -544,6 +647,7 @@ body {
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: var(--shadow-sm);
+    white-space: nowrap;
 }
 
 .pagination-btn:hover {
@@ -734,7 +838,7 @@ body {
 
 .sources-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
     margin-bottom: 3rem;
 }
@@ -804,6 +908,7 @@ body {
     gap: 1.5rem;
     justify-content: center;
     margin-bottom: 3rem;
+    flex-wrap: wrap;
 }
 
 .settings-info {
@@ -862,13 +967,16 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
+    max-width: 650px;
 }
 
 .search-input {
-    width: 600px;
+    flex: 1;
+    min-width: 0;
     padding: 12px 16px;
     border: 2px solid #000;
-    border-radius: 10px;
+    border-radius: 30px;
     outline: none;
     font-size: 16px;
     color: #000;
@@ -885,7 +993,7 @@ body {
     background: #000;
     color: #fff;
     border: none;
-    border-radius: 10px;
+    border-radius: 30px;
     padding: 12px 18px;
     font-size: 16px;
     font-weight: 500;
@@ -896,6 +1004,7 @@ body {
     gap: 6px;
     transition: all 0.3s ease;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
 }
 
 .search-btn i {
@@ -914,8 +1023,6 @@ body {
     font-size: 15px;
     color: #333;
 }
-
-/* ===== НОВЫЕ СТИЛИ ДЛЯ ВЫЖИМКИ С ВЫБОРОМ ТЕМЫ ===== */
 
 /* Кнопка краткой выжимки */
 .summary-button-container {
@@ -980,8 +1087,386 @@ body {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.summary-loader {
-    margin-left: 4px;
+/* Модальные окна (оставляем как есть, сокращаю для экономии места) */
+.topic-selection-modal, .summary-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.topic-modal-overlay, .summary-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
+    backdrop-filter: blur(8px);
+}
+
+.topic-modal-content, .summary-modal-content {
+    position: relative;
+    background: #ffffff;
+    border: 3px solid #000000;
+    border-radius: 24px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 85vh;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.summary-modal-content {
+    max-width: 900px;
+    max-height: 90vh;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ==================== АДАПТИВНОСТЬ ==================== */
+
+@media (max-width: 1200px) {
+    .news-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .news-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .sources-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    /* Показываем кнопку мобильного меню */
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    /* Показываем overlay при активном меню */
+    body.menu-open .mobile-overlay {
+        display: block;
+    }
+
+    /* Скрываем sidebar по умолчанию на мобильных */
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-xl);
+    }
+
+    /* Показываем sidebar когда меню открыто */
+    body.menu-open .sidebar {
+        transform: translateX(0);
+    }
+
+    /* Убираем отступ у основного контента */
+    .main-content {
+        margin-left: 0;
+    }
+
+    /* Добавляем отступ сверху для кнопки меню */
+    .content-wrapper {
+        padding: 80px 1rem 1rem;
+    }
+
+    /* Новости в одну колонку */
+    .news-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Уменьшаем отступы в карточках */
+    .news-content {
+        padding: 1.5rem;
+    }
+
+    .news-title a {
+        font-size: 1.1rem;
+    }
+
+    .news-summary {
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Адаптируем действия */
+    .news-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .read-more-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .action-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Пагинация */
+    .pagination {
+        padding: 1rem 1.5rem;
+        gap: 1rem;
+        flex-direction: column;
+    }
+
+    .pagination-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Поиск */
+    .search-container {
+        margin: 15px 0;
+        padding: 0 1rem;
+    }
+
+    .search-form {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .search-input {
+        width: 100%;
+    }
+
+    .search-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Кнопка выжимки */
+    .summary-button-container {
+        position: static;
+        margin: 1rem 0 1.5rem;
+    }
+
+    .summary-btn {
+        padding: 12px 24px;
+        font-size: 15px;
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+
+    /* Настройки */
+    .settings-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .sources-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .settings-actions .btn {
+        width: 100%;
+    }
+
+    /* Аутентификация */
+    .auth-container {
+        padding: 1rem;
+    }
+
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.5rem;
+    }
+
+    /* Модальные окна */
+    .topic-modal-content,
+    .summary-modal-content {
+        width: 95%;
+        max-height: 92vh;
+        border-radius: 20px;
+        border-width: 2px;
+        margin: 0 10px;
+    }
+
+    .topic-modal-header,
+    .summary-modal-header {
+        padding: 20px 16px;
+    }
+
+    .topic-modal-header h2,
+    .summary-modal-header h2 {
+        font-size: 16px;
+        flex-wrap: wrap;
+    }
+
+    .topic-close-btn,
+    .summary-close-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .topic-modal-body {
+        padding: 20px 16px;
+    }
+
+    .topics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+    }
+
+    .topic-card {
+        padding: 14px 10px;
+        border-width: 2px;
+    }
+
+    .topic-icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .topic-name {
+        font-size: 12px;
+    }
+
+    .summary-text {
+        padding: 20px 16px;
+    }
+
+    .summary-text p {
+        font-size: 15px;
+        padding-left: 12px;
+        border-left-width: 3px;
+    }
+
+    .summary-articles h3 {
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    .summary-articles-list {
+        padding: 16px;
+    }
+
+    .summary-article-item {
+        gap: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+        flex-direction: column;
+    }
+
+    .summary-article-number {
+        width: 100%;
+        height: 32px;
+        border-radius: 8px;
+    }
+
+    .summary-article-content h4 {
+        font-size: 14px;
+    }
+
+    .summary-article-meta {
+        flex-direction: column;
+        gap: 6px;
+        font-size: 13px;
+    }
+
+    .summary-meta {
+        padding: 16px;
+    }
+
+    .summary-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .summary-stats span {
+        width: 100%;
+        justify-content: center;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mobile-menu-btn {
+        width: 45px;
+        height: 45px;
+        top: 12px;
+        left: 12px;
+        border-radius: 30px;
+    }
+
+    .hamburger {
+        width: 20px;
+        height: 16px;
+    }
+
+    .hamburger span {
+        height: 2px;
+    }
+
+    .content-wrapper {
+        padding: 70px 0.75rem 0.75rem;
+    }
+
+    .news-content {
+        padding: 1.25rem;
+    }
+
+    .news-title a {
+        font-size: 1rem;
+    }
+
+    .news-summary {
+        font-size: 0.85rem;
+    }
+
+    .news-meta {
+        font-size: 0.8rem;
+    }
+
+    .auth-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .settings-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .settings-subtitle {
+        font-size: 0.95rem;
+    }
 }
 
 /* ===== МОДАЛЬНОЕ ОКНО ВЫБОРА ТЕМЫ ===== */
