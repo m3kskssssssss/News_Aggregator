@@ -22,4 +22,3 @@ databases:
   - name: news-db
     plan: free
     databaseName: news_aggregator
-    user: postgres
