@@ -320,5 +320,11 @@ def news_summary():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        start_background_tasks()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+        # В продакшене фоновые задачи не запускаем здесь
+        # start_background_tasks()
+
+    # Для локальной разработки
+    import os
+
+    if os.environ.get('RENDER') != 'true':
+        app.run(host='0.0.0.0', port=5000, debug=True)
