@@ -5,7 +5,7 @@ import time
 import sys
 import os
 from app import app, db
-from models import User, NewsSource, Article
+from models import User, NewsSource, Article, user_sources, user_favorites
 from rss_fetcher import fetch_rss_sources
 from news_fetcher import fetch_all_sources, fetch_news_from_sources
 
@@ -44,6 +44,44 @@ def is_db_initialized():
         return False
 
 
+def cleanup_meduza():
+    """Удаление источника Meduza и всех связанных статей"""
+    with app.app_context():
+        # Находим источник Meduza
+        meduza_source = NewsSource.query.filter_by(name='Meduza').first()
+
+        if meduza_source:
+            print("🗑️ Removing Meduza source and all related articles...")
+
+            # Находим все статьи от Meduza
+            meduza_articles = Article.query.filter_by(source_id=meduza_source.id).all()
+
+            # Удаляем связи из избранного для этих статей
+            for article in meduza_articles:
+                # Удаляем связи из user_favorites
+                delete_stmt = user_favorites.delete().where(
+                    user_favorites.c.article_id == article.id
+                )
+                db.session.execute(delete_stmt)
+
+            # Удаляем все статьи Meduza
+            Article.query.filter_by(source_id=meduza_source.id).delete()
+
+            # Удаляем связи из user_sources
+            delete_stmt = user_sources.delete().where(
+                user_sources.c.source_id == meduza_source.id
+            )
+            db.session.execute(delete_stmt)
+
+            # Удаляем сам источник
+            db.session.delete(meduza_source)
+
+            db.session.commit()
+            print(f"✅ Removed Meduza source and {len(meduza_articles)} articles")
+        else:
+            print("ℹ️ Meduza source not found - nothing to remove")
+
+
 def initialize_database():
     """Инициализация базы данных и загрузка новостей"""
     print("🚀 Starting database initialization...")
@@ -55,6 +93,10 @@ def initialize_database():
     with app.app_context():
         if is_db_initialized():
             print("✅ Database already initialized - skipping full init")
+
+            # УДАЛЯЕМ MEDUZA ПЕРЕД ОБНОВЛЕНИЕМ НОВОСТЕЙ
+            cleanup_meduza()
+
             print("🔄 Updating news...")
 
             # Обновляем новости
