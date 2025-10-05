@@ -36,6 +36,7 @@ class NewsFlappyGame {
 
         this.gameState = 'start'; // start, playing, paused, gameover
         this.landedArticle = null;
+        this.inputCooldown = false; // Защита от множественных кликов
 
         // UI элементы
         this.startScreen = document.getElementById('startScreen');
@@ -47,35 +48,58 @@ class NewsFlappyGame {
 
     init() {
         console.log('Инициализация игры...');
+        console.log('Размер канваса:', this.canvas.width, 'x', this.canvas.height);
 
+        // Загружаем случайные статьи
         this.loadRandomArticles();
 
-        // Универсальный обработчик ввода
-        const handleGameInput = (e) => {
-            if (e) e.preventDefault();
+        // Универсальные обработчики ввода
+        this.setupInputHandlers();
 
-            // Проверяем, активно ли игровое окно
-            if (this.gameState === 'start' && this.startScreen.style.display !== 'none') {
+        // Кнопки
+        this.setupButton('playAgainBtn', 'restart');
+        this.setupButton('restartBtn', 'restart');
+        this.setupButton('readArticleBtn', 'readArticle');
+
+        // Обновляем UI
+        this.updateUI();
+
+        // Запускаем игровой цикл
+        this.gameLoop();
+
+        console.log('Игра инициализирована!');
+    }
+
+    setupInputHandlers() {
+        // Универсальный обработчик для всех устройств
+        const handleGameInput = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            if (this.inputCooldown) return;
+            this.inputCooldown = true;
+
+            console.log('Input detected, game state:', this.gameState);
+
+            if (this.gameState === 'start') {
                 this.startGame();
             } else if (this.gameState === 'playing') {
                 this.jump();
             }
+
+            setTimeout(() => {
+                this.inputCooldown = false;
+            }, 200);
         };
 
         // Десктоп события
         this.canvas.addEventListener('click', handleGameInput);
 
-        // Мобильные события
-        this.canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            // Сохраняем позицию тача для возможной будущей логики
-            this.lastTouchY = e.touches[0].clientY;
-        });
-
-        this.canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            handleGameInput();
-        });
+        // Мобильные события - используем touchstart для мгновенного отклика
+        this.canvas.addEventListener('touchstart', handleGameInput, { passive: false });
+        this.canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
 
         // Клавиатура
         document.addEventListener('keydown', (e) => {
@@ -84,29 +108,21 @@ class NewsFlappyGame {
                 handleGameInput();
             }
         });
+    }
 
-        // Обработчики для кнопок
-        const setupButton = (id, method) => {
-            const btn = document.getElementById(id);
-            if (btn) {
-                const handler = () => {
-                    this[method]();
-                };
-                btn.addEventListener('click', handler);
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    handler();
-                });
-            }
-        };
+    setupButton(buttonId, methodName) {
+        const button = document.getElementById(buttonId);
+        if (button) {
+            const handler = () => {
+                this[methodName]();
+            };
 
-        setupButton('playAgainBtn', 'restart');
-        setupButton('restartBtn', 'restart');
-        setupButton('readArticleBtn', 'readArticle');
-
-        this.updateUI();
-        this.gameLoop();
-        console.log('Игра инициализирована!');
+            button.addEventListener('click', handler);
+            button.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handler();
+            }, { passive: false });
+        }
     }
 
     async loadRandomArticles() {
@@ -157,14 +173,11 @@ class NewsFlappyGame {
     }
 
     handleInput() {
-        if (this.gameState === 'start') {
-            this.startGame();
-        } else if (this.gameState === 'playing') {
-            this.jump();
-        }
+        // Этот метод теперь используется через setupInputHandlers
     }
 
     startGame() {
+        console.log('Starting game...');
         this.gameState = 'playing';
         this.startScreen.style.display = 'none';
         this.jump();
