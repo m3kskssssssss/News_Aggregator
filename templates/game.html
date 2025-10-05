@@ -40,7 +40,7 @@
         <!-- Экран паузы (приземление на статью) -->
         <div id="pauseScreen" class="game-screen" style="display: none;">
             <div class="screen-content">
-                <h2>ПАУЗА</h2>
+                <h2>Game over</h2>
                 <p>Ты приземлился на новость!</p>
 
                 <!-- Статья на которую приземлился -->
@@ -63,12 +63,8 @@
         <!-- Экран проигрыша -->
         <div id="gameOverScreen" class="game-screen" style="display: none;">
             <div class="screen-content">
-                <h2>GAME OVER</h2>
-                <p class="death-message">Game Over!</p>
-                <div class="score-display">
-                    <span class="score-label">Счет:</span>
-                    <span id="finalScore" class="score-value">0</span>
-                </div>
+                <h2>Game over</h2>
+                <p class="death-message">Под тобой (в момент столкновения) новость!</p>
 
                 <!-- Статья на которую упал -->
                 <div id="landedArticle" class="landed-article"></div>
