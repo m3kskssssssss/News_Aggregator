@@ -46,11 +46,6 @@ def fetch_rss_sources():
             'category': 'sports'
         },
         {
-            'name': 'Meduza',
-            'url': 'https://meduza.io/rss/all',
-            'category': 'general'
-        },
-        {
             'name': 'Interfax',
             'url': 'https://www.interfax.ru/rss.asp',
             'category': 'general'
