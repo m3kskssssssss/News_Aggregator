@@ -1,4 +1,4 @@
-// static/js/game.js - УПРОЩЕННАЯ ВЕРСИЯ
+// static/js/game.js - ИСПРАВЛЕННАЯ ВЕРСИЯ
 
 class NewsFlappyGame {
     constructor() {
@@ -16,12 +16,12 @@ class NewsFlappyGame {
             width: 40,
             height: 40,
             velocity: 0,
-            gravity: 0.35,  // Уменьшили с 0.5 - легче управлять
-            jumpForce: -8   // Уменьшили с -10 - более плавный прыжок
+            gravity: 0.35,
+            jumpForce: -8
         };
 
         this.pipes = [];
-        this.pipeGap = 220;  // Увеличили с 180 - легче пролетать
+        this.pipeGap = 220;
         this.pipeWidth = 60;
         this.pipeSpeed = 3;
         this.frameCount = 0;
@@ -37,7 +37,7 @@ class NewsFlappyGame {
 
         this.gameState = 'start';
         this.landedArticle = null;
-        this.firstJump = false; // Флаг первого прыжка
+        this.firstJump = false;
 
         // Эффекты столкновений
         this.hitCooldown = 0;
@@ -57,8 +57,7 @@ class NewsFlappyGame {
         // Загружаем случайные статьи
         this.loadRandomArticles();
 
-        // =============== ОБРАБОТЧИКИ ДЛЯ CANVAS ===============
-
+        // Обработчики для canvas
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.handleInput();
@@ -73,8 +72,7 @@ class NewsFlappyGame {
             this.handleInput();
         });
 
-        // =============== ОБРАБОТЧИКИ ДЛЯ ЭКРАНОВ ===============
-
+        // Обработчики для экранов
         this.startScreen.addEventListener('touchstart', (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -86,8 +84,7 @@ class NewsFlappyGame {
             this.handleInput();
         });
 
-        // =============== КЛАВИАТУРА ===============
-
+        // Клавиатура
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
@@ -95,12 +92,9 @@ class NewsFlappyGame {
             }
         });
 
-        // =============== КНОПКИ ===============
-
+        // Кнопки
         const playAgainBtn = document.getElementById('playAgainBtn');
         const restartBtn = document.getElementById('restartBtn');
-
-        // Кнопка "Читать статью" есть в обоих экранах (pause и gameOver)
         const readArticleBtns = document.querySelectorAll('#readArticleBtn');
 
         if (playAgainBtn) {
@@ -119,7 +113,6 @@ class NewsFlappyGame {
             restartBtn.addEventListener('click', () => this.restart());
         }
 
-        // Добавляем обработчики для всех кнопок "Читать статью"
         readArticleBtns.forEach(btn => {
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -194,12 +187,12 @@ class NewsFlappyGame {
         this.gameState = 'playing';
         this.startScreen.style.display = 'none';
         this.bird.x = 100;
-        this.firstJump = false; // Еще не было первого прыжка
-        this.bird.velocity = 0; // Обнуляем скорость
+        this.firstJump = false;
+        this.bird.velocity = 0;
     }
 
     jump() {
-        this.firstJump = true; // Теперь был первый прыжок
+        this.firstJump = true;
         this.bird.velocity = this.bird.jumpForce;
     }
 
@@ -265,18 +258,17 @@ class NewsFlappyGame {
     update() {
         if (this.gameState !== 'playing') return;
 
-        // Обновление птицы - применяем гравитацию только после первого прыжка
+        // Обновление птицы
         if (this.firstJump) {
             this.bird.velocity += this.bird.gravity;
             this.bird.y += this.bird.velocity;
         } else {
-            // До первого прыжка птица летит прямо
             this.bird.velocity = 0;
         }
 
-        // Генерация труб - РЕЖЕ (увеличили с 90 до 150 фреймов)
+        // Генерация труб
         this.frameCount++;
-        if (this.frameCount % 150 === 0 && this.firstJump) { // Трубы появляются только после первого прыжка
+        if (this.frameCount % 150 === 0 && this.firstJump) {
             const minHeight = 50;
             const maxHeight = this.canvas.height - this.pipeGap - this.articleHeight - 50;
             const height = Math.random() * (maxHeight - minHeight) + minHeight;
@@ -332,6 +324,7 @@ class NewsFlappyGame {
 
         let isCollidingWithPipe = false;
 
+        // Проверка столкновения с трубами
         for (let pipe of this.pipes) {
             if (this.bird.x + this.bird.width > pipe.x &&
                 this.bird.x < pipe.x + this.pipeWidth) {
@@ -351,14 +344,16 @@ class NewsFlappyGame {
             }
         }
 
+        // Проверка застревания между блоками
         if (isCollidingWithPipe) {
             for (let pipe of this.pipes) {
                 if (pipe.x <= this.bird.x + this.bird.width &&
                     pipe.x + this.pipeWidth > this.bird.x) {
                     if (pipe.x > this.bird.x + this.bird.width / 2) {
                         console.log('💀 Застряла между блоками!');
-                        // Берем статью под птицей в момент врезания
+                        // ВАЖНО: Устанавливаем статью ПЕРЕД вызовом gameOver
                         this.landedArticle = this.getArticleUnderBird();
+                        console.log('📰 Статья под птицей:', this.landedArticle ? this.landedArticle.title : 'не найдена');
                         this.gameOver();
                         return;
                     }
@@ -366,14 +361,17 @@ class NewsFlappyGame {
             }
         }
 
+        // Проверка вылета за верхнюю границу
         if (this.bird.y < -10) {
             console.log('💀 Улетела за верхнюю границу!');
-            // Берем статью под птицей в момент врезания
+            // ВАЖНО: Устанавливаем статью ПЕРЕД вызовом gameOver
             this.landedArticle = this.getArticleUnderBird();
+            console.log('📰 Статья под птицей:', this.landedArticle ? this.landedArticle.title : 'не найдена');
             this.gameOver();
             return;
         }
 
+        // Проверка приземления на статью
         if (this.bird.y + this.bird.height >= this.canvas.height - this.articleHeight) {
             this.landOnArticle();
         }
@@ -394,6 +392,8 @@ class NewsFlappyGame {
 
         if (this.landedArticle) {
             console.log('✅ Приземлились на статью:', this.landedArticle.title);
+        } else {
+            console.warn('⚠️ Статья под птицей не найдена!');
         }
 
         this.pause();
@@ -405,42 +405,6 @@ class NewsFlappyGame {
         if (this.landedArticle) {
             const articleInfo = document.querySelector('#pauseScreen #landedArticle');
 
-            let statsText = '';
-            if (this.hitCount > 0) {
-                statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
-            } else {
-                statsText = `<p style="color: #51cf66; font-size: 0.9rem; margin-bottom: 1rem;">✨ Без столкновений!</p>`;
-            }
-
-            articleInfo.innerHTML = `
-                ${statsText}
-                <div class="article-card">
-                    <h3>${this.landedArticle.title}</h3>
-                    <p class="article-source">
-                        <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
-                    </p>
-                </div>
-            `;
-        }
-
-        this.pauseScreen.style.display = 'flex';
-
-        if (this.score > this.bestScore) {
-            this.bestScore = this.score;
-            localStorage.setItem('newsGameBestScore', this.bestScore.toString());
-            this.updateUI();
-        }
-    }
-
-    gameOver() {
-        this.gameState = 'gameover';
-        document.getElementById('finalScore').textContent = this.score;
-
-        const deathMessage = document.querySelector('.death-message');
-
-        // Показываем статью на которую упал
-        if (this.landedArticle) {
-            const articleInfo = document.querySelector('#gameOverScreen #landedArticle');
             if (articleInfo) {
                 let statsText = '';
                 if (this.hitCount > 0) {
@@ -458,6 +422,77 @@ class NewsFlappyGame {
                         </p>
                     </div>
                 `;
+            } else {
+                console.error('❌ Элемент #pauseScreen #landedArticle не найден!');
+            }
+        } else {
+            console.warn('⚠️ landedArticle не установлена в pause()');
+        }
+
+        this.pauseScreen.style.display = 'flex';
+
+        if (this.score > this.bestScore) {
+            this.bestScore = this.score;
+            localStorage.setItem('newsGameBestScore', this.bestScore.toString());
+            this.updateUI();
+        }
+    }
+
+    gameOver() {
+        console.log('💀 Game Over! Статья:', this.landedArticle ? this.landedArticle.title : 'не найдена');
+
+        this.gameState = 'gameover';
+        document.getElementById('finalScore').textContent = this.score;
+
+        const deathMessage = document.querySelector('.death-message');
+
+        // Показываем статью на которую упал
+        if (this.landedArticle) {
+            console.log('✅ Показываем статью:', this.landedArticle.title);
+            const articleInfo = document.querySelector('#gameOverScreen #landedArticle');
+
+            if (articleInfo) {
+                let statsText = '';
+                if (this.hitCount > 0) {
+                    statsText = `<p style="color: #ff6b6b; font-size: 0.9rem; margin-bottom: 1rem;">💥 Столкновений: ${this.hitCount}</p>`;
+                } else {
+                    statsText = `<p style="color: #51cf66; font-size: 0.9rem; margin-bottom: 1rem;">✨ Без столкновений!</p>`;
+                }
+
+                articleInfo.innerHTML = `
+                    ${statsText}
+                    <div class="article-card">
+                        <h3>${this.landedArticle.title}</h3>
+                        <p class="article-source">
+                            <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                        </p>
+                    </div>
+                `;
+                console.log('✅ Статья успешно отображена');
+            } else {
+                console.error('❌ Элемент #gameOverScreen #landedArticle не найден!');
+            }
+        } else {
+            console.warn('⚠️ landedArticle не установлена - пытаемся найти статью');
+            // Если статья не была установлена, пробуем найти её сейчас
+            this.landedArticle = this.getArticleUnderBird();
+
+            if (this.landedArticle) {
+                console.log('✅ Статья найдена:', this.landedArticle.title);
+                // Повторно вызываем gameOver с найденной статьей
+                const articleInfo = document.querySelector('#gameOverScreen #landedArticle');
+                if (articleInfo) {
+                    articleInfo.innerHTML = `
+                        <div class="article-card">
+                            <h3>${this.landedArticle.title}</h3>
+                            <p class="article-source">
+                                <i class="fas fa-newspaper"></i> ${this.landedArticle.source}
+                            </p>
+                        </div>
+                    `;
+                }
+            } else {
+                console.error('❌ Не удалось найти статью под птицей!');
             }
         }
 
