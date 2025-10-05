@@ -132,10 +132,17 @@ def get_user_articles(user, page=1, per_page=20):
     """Получает статьи для пользователя на основе выбранных источников"""
     if not user.selected_sources:
         # Если пользователь не выбрал источники, показываем все
-        return Article.query.order_by(Article.published_at.desc()).paginate(
+        return Article.query.order_by(
+            Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+            Article.published_at.desc()
+        ).paginate(
             page=page, per_page=per_page, error_out=False)
 
     source_ids = [source.id for source in user.selected_sources]
-    return Article.query.filter(Article.source_id.in_(source_ids)).order_by(
-        Article.published_at.desc()).paginate(
+    return Article.query.filter(
+        Article.source_id.in_(source_ids)
+    ).order_by(
+        Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+        Article.published_at.desc()
+    ).paginate(
         page=page, per_page=per_page, error_out=False)

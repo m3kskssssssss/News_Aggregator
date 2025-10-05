@@ -1,4 +1,4 @@
-# news_aggregator/app.py
+# news_aggregator/app.py - ПОЛНАЯ ВЕРСИЯ
 
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -7,6 +7,7 @@ from models import db, User, NewsSource, Article
 from forms import LoginForm, RegistrationForm, SourceSelectionForm
 from news_fetcher import get_user_articles, fetch_news_from_sources
 from cli_commands import register_commands
+from datetime import datetime
 import threading
 import time
 
@@ -65,29 +66,35 @@ def index():
     q = request.args.get('q', "").strip()
 
     if current_user.is_authenticated:
-        # Для авторизованных пользователей - персональная лента
         articles = get_user_articles(current_user, page, app.config['POSTS_PER_PAGE'])
         if q:
-            # Поиск только по статьям пользователя
             articles = Article.query.filter(
                 (Article.title.ilike(f"%{q}%")) |
                 (Article.summary.ilike(f"%{q}%")) |
                 (Article.description.ilike(f"%{q}%"))
-            ).order_by(Article.published_at.desc()).paginate(
+            ).order_by(
+                Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+                Article.published_at.desc()                # Потом по дате
+            ).paginate(
                 page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
             )
     else:
-        # Для неавторизованных - все новости
         if q:
             articles = Article.query.filter(
                 (Article.title.ilike(f"%{q}%")) |
                 (Article.summary.ilike(f"%{q}%")) |
                 (Article.description.ilike(f"%{q}%"))
-            ).order_by(Article.published_at.desc()).paginate(
+            ).order_by(
+                Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+                Article.published_at.desc()
+            ).paginate(
                 page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
             )
         else:
-            articles = Article.query.order_by(Article.published_at.desc()).paginate(
+            articles = Article.query.order_by(
+                Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+                Article.published_at.desc()
+            ).paginate(
                 page=page, per_page=app.config['POSTS_PER_PAGE'], error_out=False
             )
 
@@ -173,7 +180,6 @@ def article_detail(article_id):
     return render_template('article_detail.html', article=article)
 
 
-# 🔹 Добавляем избранное
 @app.route('/favorite/toggle/<int:article_id>', methods=['POST'])
 @login_required
 def toggle_favorite(article_id):
@@ -195,7 +201,12 @@ def favorites():
     page = request.args.get('page', 1, type=int)
     per_page = app.config.get('POSTS_PER_PAGE', 10)
 
-    favorites_query = Article.query.join(User.favorites).filter(User.id == current_user.id).order_by(Article.published_at.desc())
+    favorites_query = Article.query.join(User.favorites).filter(
+        User.id == current_user.id
+    ).order_by(
+        Article.url_to_image.isnot(None).desc(),  # Сначала с картинками
+        Article.published_at.desc()
+    )
     articles = favorites_query.paginate(page=page, per_page=per_page, error_out=False)
 
     return render_template('favorites.html', articles=articles)
@@ -204,26 +215,61 @@ def favorites():
 @app.route('/api/news-summary')
 @login_required
 def news_summary():
-    """API endpoint для генерации краткой выжимки новостей (БЕЗ LLM)"""
+    """API endpoint для генерации краткой выжимки новостей с фильтрацией по теме"""
     try:
+        # Получаем параметр темы из запроса
+        topic = request.args.get('topic', None)
+
+        print(f"🔍 Запрос выжимки. Тема: {topic}")
+
         # Получаем статьи пользователя
         if current_user.selected_sources:
             source_ids = [source.id for source in current_user.selected_sources]
-            articles = Article.query.filter(
+            articles_query = Article.query.filter(
                 Article.source_id.in_(source_ids)
-            ).order_by(Article.published_at.desc()).limit(15).all()
+            ).order_by(Article.published_at.desc())
+            print(f"📊 Пользователь выбрал {len(source_ids)} источников")
         else:
             # Если источники не выбраны, берем все новости
-            articles = Article.query.order_by(
+            articles_query = Article.query.order_by(
                 Article.published_at.desc()
-            ).limit(15).all()
+            )
+            print(f"📊 Используем все источники")
+
+        # Если указана тема, фильтруем по ней
+        if topic:
+            from summary_generator import filter_articles_by_topic
+            all_articles = articles_query.limit(100).all()  # Берем больше статей для фильтрации
+            print(f"📰 Получено {len(all_articles)} статей для фильтрации")
+            articles = filter_articles_by_topic(all_articles, topic)
+            print(f"✅ После фильтрации осталось {len(articles)} статей по теме '{topic}'")
+        else:
+            articles = articles_query.limit(15).all()
+            print(f"📰 Получено {len(articles)} статей без фильтрации")
+
+        # Проверяем, есть ли статьи после фильтрации
+        if not articles:
+            print(f"⚠️ Новости по теме '{topic}' не найдены")
+            return jsonify({
+                'success': True,
+                'data': {
+                    'summary': f'По выбранной теме новостей не найдено.',
+                    'top_articles': [],
+                    'generated_at': datetime.now().strftime('%d.%m.%Y %H:%M'),
+                    'total_sources': 0,
+                    'topic': topic
+                }
+            })
 
         # Импортируем функцию генерации выжимки
         from summary_generator import generate_news_summary, get_summary_statistics
 
-        # Генерируем выжимку (быстро, без внешних API)
-        summary_data = generate_news_summary(articles, max_articles=5)
+        # Генерируем выжимку
+        print(f"🤖 Генерируем выжимку из {len(articles)} статей...")
+        summary_data = generate_news_summary(articles, max_articles=5, topic=topic)
         stats = get_summary_statistics(articles)
+
+        print(f"✅ Выжимка сгенерирована успешно")
 
         return jsonify({
             'success': True,
@@ -232,12 +278,15 @@ def news_summary():
                 'top_articles': summary_data['top_articles'],
                 'generated_at': summary_data['generated_at'].strftime('%d.%m.%Y %H:%M'),
                 'total_sources': len(set([a['source'] for a in summary_data['top_articles']])),
-                'statistics': stats
+                'statistics': stats,
+                'topic': topic
             }
         })
 
     except Exception as e:
-        print(f"Ошибка генерации выжимки: {e}")
+        print(f"❌ Ошибка генерации выжимки: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': 'Не удалось создать выжимку. Попробуйте позже.'

@@ -1,4 +1,4 @@
-# news_aggregator/summary_generator.py
+# news_aggregator/summary_generator.py - ПОЛНАЯ ВЕРСИЯ
 
 import re
 from collections import Counter, defaultdict
@@ -6,8 +6,96 @@ from datetime import datetime, timedelta
 from models import Article
 
 
-def generate_news_summary(articles, max_articles=5):
-    """Генерирует краткую выжимку из топ новостей БЗ LLM"""
+def filter_articles_by_topic(articles, topic):
+    """Фильтрует статьи по заданной теме"""
+
+    # Определяем ключевые слова для каждой темы
+    topic_keywords = {
+        'politics': {
+            'keywords': ['путин', 'президент', 'правительство', 'госдума', 'министр',
+                         'депутат', 'парламент', 'закон', 'указ', 'выборы', 'партия',
+                         'политика', 'государство', 'власть', 'регион', 'губернатор'],
+            'weight': 1.0
+        },
+        'technology': {
+            'keywords': ['технология', 'цифровой', 'интернет', 'компьютер', 'софт',
+                         'приложение', 'стартап', 'инновация', 'искусственный интеллект',
+                         'ai', 'программное обеспечение', 'гаджет', 'смартфон', 'робот',
+                         'данные', 'кибер', 'облако', 'блокчейн'],
+            'weight': 1.0
+        },
+        'economy': {
+            'keywords': ['рубль', 'доллар', 'экономика', 'инфляция', 'банк', 'нефть',
+                         'газ', 'цена', 'рост', 'падение', 'ввп', 'бизнес', 'финансы',
+                         'инвестиции', 'акции', 'биржа', 'торговля', 'экспорт', 'импорт',
+                         'промышленность', 'производство'],
+            'weight': 1.0
+        },
+        'sports': {
+            'keywords': ['футбол', 'хоккей', 'олимпиада', 'чемпионат', 'матч', 'игра',
+                         'команда', 'спортсмен', 'тренер', 'победа', 'поражение', 'гол',
+                         'спорт', 'турнир', 'лига', 'кубок', 'соревнование', 'атлет'],
+            'weight': 1.0
+        },
+        'culture': {
+            'keywords': ['театр', 'кино', 'музыка', 'художник', 'фестиваль', 'концерт',
+                         'выставка', 'книга', 'литература', 'искусство', 'культура',
+                         'актер', 'режиссер', 'писатель', 'музей', 'галерея', 'премия'],
+            'weight': 1.0
+        },
+        'science': {
+            'keywords': ['исследование', 'ученый', 'открытие', 'эксперимент', 'медицина',
+                         'лечение', 'вакцина', 'наука', 'научный', 'космос', 'физика',
+                         'химия', 'биология', 'генетика', 'клиника', 'больница', 'врач'],
+            'weight': 1.0
+        },
+        'world': {
+            'keywords': ['сша', 'китай', 'европа', 'украина', 'санкции', 'переговоры',
+                         'соглашение', 'договор', 'страна', 'международный', 'мир',
+                         'конфликт', 'война', 'мирный', 'дипломатия', 'визит'],
+            'weight': 1.0
+        },
+        'society': {
+            'keywords': ['общество', 'люди', 'город', 'регион', 'жители', 'социальный',
+                         'образование', 'школа', 'университет', 'студент', 'учитель',
+                         'пенсия', 'зарплата', 'работа', 'безработица', 'демография'],
+            'weight': 1.0
+        },
+        'incidents': {
+            'keywords': ['авария', 'пожар', 'взрыв', 'катастрофа', 'происшествие', 'чп',
+                         'спасение', 'жертвы', 'пострадавшие', 'эвакуация', 'мчс',
+                         'полиция', 'следствие', 'преступление', 'суд'],
+            'weight': 1.0
+        }
+    }
+
+    if topic not in topic_keywords:
+        return articles
+
+    keywords = topic_keywords[topic]['keywords']
+    filtered_articles = []
+
+    # Фильтруем статьи по ключевым словам
+    for article in articles:
+        # Объединяем весь текст статьи
+        full_text = f"{article.title} {article.description or ''} {article.summary or ''}".lower()
+
+        # Подсчитываем количество совпадений
+        matches = sum(full_text.count(keyword) for keyword in keywords)
+
+        # Если есть хотя бы 1 совпадение, добавляем статью
+        if matches > 0:
+            filtered_articles.append((article, matches))
+
+    # Сортируем по количеству совпадений (релевантности)
+    filtered_articles.sort(key=lambda x: x[1], reverse=True)
+
+    # Возвращаем только статьи (без счетчика совпадений)
+    return [article for article, _ in filtered_articles[:15]]
+
+
+def generate_news_summary(articles, max_articles=5, topic=None):
+    """Генерирует краткую выжимку из топ новостей (обновленная версия)"""
 
     if not articles:
         return {
@@ -19,8 +107,8 @@ def generate_news_summary(articles, max_articles=5):
     # Берем топ статей и анализируем их
     top_articles = sorted(articles, key=lambda x: x.published_at, reverse=True)[:max_articles]
 
-    # Создаем выжимку
-    summary_text = create_intelligent_summary(top_articles, articles)
+    # Создаем выжимку с учетом темы
+    summary_text = create_intelligent_summary(top_articles, articles, topic)
 
     # Подготавливаем данные статей
     article_links = []
@@ -44,11 +132,23 @@ def generate_news_summary(articles, max_articles=5):
     }
 
 
-def create_intelligent_summary(top_articles, all_articles):
-    """Создает умную выжимку на основе анализа текста"""
+def create_intelligent_summary(top_articles, all_articles, topic=None):
+    """Создает умную выжимку на основе анализа текста (обновленная версия)"""
+
+    # Названия тем на русском
+    topic_names = {
+        'politics': 'Политика',
+        'technology': 'Технологии',
+        'economy': 'Экономика',
+        'sports': 'Спорт',
+        'culture': 'Культура',
+        'science': 'Наука',
+        'world': 'Международные отношения',
+        'society': 'Общество',
+        'incidents': 'Происшествия'
+    }
 
     # Анализируем темы и тренды
-    topics = analyze_topics(all_articles)
     sources_stats = analyze_sources(all_articles)
     time_stats = analyze_time_distribution(all_articles)
 
@@ -57,6 +157,11 @@ def create_intelligent_summary(top_articles, all_articles):
 
     # Создаем структурированную выжимку
     summary_parts = []
+
+    # Добавляем информацию о теме, если она указана
+    if topic and topic in topic_names:
+        topic_name = topic_names[topic]
+        summary_parts.append(f"Выжимка по теме '{topic_name}'")
 
     # Временная статистика
     today = datetime.now().date()
@@ -72,16 +177,8 @@ def create_intelligent_summary(top_articles, all_articles):
     if len(top_sources) > 1:
         sources_text = ", ".join(top_sources[:-1]) + f" и {top_sources[-1]}"
         summary_parts.append(f"от источников: {sources_text}")
-
-    # Главные темы
-    if topics:
-        main_topics = []
-        for topic, articles_in_topic in list(topics.items())[:2]:
-            if len(articles_in_topic) >= 2:
-                main_topics.append(f"{topic} ({len(articles_in_topic)} новостей)")
-
-        if main_topics:
-            summary_parts.append(f"Основные темы: {', '.join(main_topics)}")
+    elif len(top_sources) == 1:
+        summary_parts.append(f"от источника: {top_sources[0]}")
 
     # Ключевые события
     if key_events:
@@ -307,7 +404,6 @@ def get_summary_statistics(articles):
     }
 
 
-# Дополнительная функция для экспериментов
 def create_experimental_summary(articles):
     """Экспериментальный алгоритм выжимки"""
 

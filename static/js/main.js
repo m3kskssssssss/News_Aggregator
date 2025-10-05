@@ -1,4 +1,4 @@
-// static/js/main.js
+// static/js/main.js - ПОЛНАЯ ВЕРСИЯ
 
 // --- Утилиты ---
 function getCsrfToken() {
@@ -8,7 +8,7 @@ function getCsrfToken() {
 
 // Универсальный обработчик toggle favorite для кнопок с классом .favorite-btn или .bookmark-btn
 async function toggleFavoriteRequest(articleId) {
-    const url = `/favorite/toggle/${articleId}`; // ожидаем, что такой маршрут есть
+    const url = `/favorite/toggle/${articleId}`;
     const headers = {
         "X-Requested-With": "XMLHttpRequest"
     };
@@ -81,10 +81,7 @@ function initFavoriteButtons() {
         if (result && result.status) {
             updateFavoriteUI(btn, result.status);
         } else {
-            // если нет result — покажем сообщение в консоль и небольшое уведомление
             console.warn("Не удалось получить статус добавления/удаления избранного", result);
-            // можно показать toast/alert: например:
-            // alert("Не удалось обновить избранное. Проверьте консоль.");
         }
     });
 }
@@ -107,68 +104,16 @@ function initShareButtons() {
         } else {
             // Фallback: открываем окно Telegram как быстрый способ, и показываем prompt
             const telegram = `https://t.me/share/url?url=${encodeURIComponent(url)}`;
-            // открываем popup и одновременно показываем prompt для копирования
             window.open(telegram, "_blank", "width=600,height=400");
-            // prompt для копирования (удобно на десктопе)
             setTimeout(() => {
-                // Не блокирует, просто помогаем пользователю
                 prompt("Скопируйте ссылку для шаринга:", url);
             }, 200);
         }
     });
 }
 
-// --- Инициализация после загрузки DOM ---
-document.addEventListener("DOMContentLoaded", function () {
-    try {
-        initFavoriteButtons();
-        initShareButtons();
-        console.log("main.js: handlers initialized");
-    } catch (err) {
-        console.error("main.js init error", err);
-    }
-});
-
-
-// Обработчик для краткой выжимки
-document.getElementById('generateSummary').addEventListener('click', async function() {
-    const btn = this;
-    const loader = btn.querySelector('.summary-loader');
-    const text = btn.querySelector('span');
-
-    // Показываем загрузку
-    btn.disabled = true;
-    loader.style.display = 'inline-block';
-    text.textContent = 'Генерируем...';
-
-    try {
-        const response = await fetch('/api/news-summary', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showSummaryModal(result.data);
-        } else {
-            alert('Ошибка: ' + (result.error || 'Не удалось создать выжимку'));
-        }
-    } catch (error) {
-        console.error('Ошибка при получении выжимки:', error);
-        alert('Не удалось создать выжимку. Попробуйте позже.');
-    } finally {
-        // Скрываем загрузку
-        btn.disabled = false;
-        loader.style.display = 'none';
-        text.textContent = 'Краткая выжимка';
-    }
-});
-
-// "Настройки источников сохранены!" сама исчезает и закрывается по кнопке
-document.addEventListener("DOMContentLoaded", function() {
+// --- Автоудаление flash сообщений ---
+function initFlashMessages() {
     const alerts = document.querySelectorAll(".alert");
 
     alerts.forEach(alert => {
@@ -187,4 +132,16 @@ document.addEventListener("DOMContentLoaded", function() {
             setTimeout(() => alert.remove(), 300);
         }, 3000);
     });
+}
+
+// --- Инициализация после загрузки DOM ---
+document.addEventListener("DOMContentLoaded", function () {
+    try {
+        initFavoriteButtons();
+        initShareButtons();
+        initFlashMessages();
+        console.log("✅ main.js: handlers initialized");
+    } catch (err) {
+        console.error("❌ main.js init error", err);
+    }
 });
