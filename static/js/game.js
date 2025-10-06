@@ -113,10 +113,10 @@ class NewsFlappyGame {
         }
 
         if (readArticleBtn) {
-            readArticleBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+            // Убираем preventDefault для корректной работы на мобильных
+            readArticleBtn.addEventListener('touchstart', () => {
                 this.readArticle();
-            }, { passive: false });
+            });
             readArticleBtn.addEventListener('click', () => this.readArticle());
         }
 
